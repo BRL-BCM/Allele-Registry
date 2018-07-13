@@ -1,0 +1,9 @@
+Error for the following:
+Expected: ([18,20),S*,GSYRT) => [[([64,64),,GGC),([66,71),GTAGA,C),([73,76),GAA,)]]
+Found   : ([18,20),S*,GSYRT) => []
+Error for the following:
+Expected: ([19,20),*,YRT) => [[([66,71),GTAGA,C),([73,76),GAA,)]]
+Found   : ([19,20),*,YRT) => []
+Error for the following:
+Expected: ([20,20),,) => [[([66,71),GTAGA,C)],[([73,76),GAA,)]]
+Found   : ([20,20),,) => [[([66,71),GTAGA,C)]]

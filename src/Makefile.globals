@@ -1,0 +1,31 @@
+ROOT_DIR=$(dir $(lastword $(MAKEFILE_LIST)))
+
+CXX=g++
+CXXFLAGS+=-Wall -std=c++11 -O3
+
+MAKE_BIN=$(CXX) -static-libstdc++ -static-libgcc -o $@ $^ -Wl,-Bstatic 
+
+LIB_MYSQL=-L$(ROOT_DIR)mysql -lMysql -L$(ROOT_DIR)dependencies/mysql/lib -lmysqlclient -Wl,-Bdynamic -pthread -ldl -lrt -Wl,-Bstatic
+LIB_COMMON_TOOLS=-L$(ROOT_DIR)commonTools -lCommonTools
+LIB_CORE=-L$(ROOT_DIR)core -lCore
+LIB_FLAT_DB=-L$(ROOT_DIR)flatDb -lFlatDb -lboost_system
+LIB_REFERENCES_DATABASE=-L$(ROOT_DIR)referencesDatabase -lReferencesDatabase $(LIB_CORE) -lboost_filesystem -lboost_timer -lboost_chrono -lboost_system -Wl,-Bdynamic -pthread -lrt -Wl,-Bstatic
+LIB_ALLELES_DATABASE=-L$(ROOT_DIR)allelesDatabase -lAllelesDatabase $(LIB_FLAT_DB) $(LIB_REFERENCES_DATABASE)
+LIB_EXTERNAL_SOURCES=-L$(ROOT_DIR)externalSources -lExternalSources $(LIB_CORE) $(LIB_MYSQL) $(LIB_COMMON_TOOLS)
+LIB_REQUESTS=-L$(ROOT_DIR)requests -lRequests $(LIB_ALLELES_DATABASE) $(LIB_EXTERNAL_SOURCES)
+# others (not used)
+LIB_PREFIX_TREE_DB=-L$(ROOT_DIR)prefixTreeDb -lPrefixTreeDb -lboost_system
+LIB_LMDB_DB=-L$(ROOT_DIR)lmdbDb -lLmdbDb
+
+
+DEP_MYSQL=$(ROOT_DIR)mysql/libMysql.a  $(ROOT_DIR)dependencies/mysql/lib/libmysqlclient.a
+DEP_COMMON_TOOLS=$(ROOT_DIR)commonTools/libCommonTools.a
+DEP_CORE=$(ROOT_DIR)core/libCore.a
+DEP_FLAT_DB=$(ROOT_DIR)flatDb/libFlatDb.a
+DEP_REFERENCES_DATABASE=$(ROOT_DIR)referencesDatabase/libReferencesDatabase.a $(DEP_CORE)
+DEP_ALLELES_DATABASE=$(ROOT_DIR)allelesDatabase/libAllelesDatabase.a $(DEP_FLAT_DB) $(DEP_REFERENCES_DATABASE)
+DEP_EXTERNAL_SOURCES=$(ROOT_DIR)externalSources/libExternalSources.a $(DEP_CORE)  $(DEP_MYSQL) $(DEP_COMMON_TOOLS)
+DEP_REQUESTS=$(ROOT_DIR)requests/libRequests.a $(DEP_ALLELES_DATABASE) $(DEP_EXTERNAL_SOURCES)
+# others (not used)
+DEP_PREFIX_TREE_DB=$(ROOT_DIR)prefixTreeDb/libPrefixTreeDb.a
+DEP_LMDB_DB=$(ROOT_DIR)lmdbDb/libLmdbDb.a

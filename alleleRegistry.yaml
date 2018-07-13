@@ -1,0 +1,58 @@
+# FQDN of this instance of Allele Registry. 
+# It is required and it is used for building links.
+# No slash at the end.
+alleleRegistryFQDN: localhost
+
+# server options (where to listen for HTTP requests)
+server:
+    interface: 127.0.0.1
+    port: 16004
+    threads: 12
+
+# parameters of reference database
+referencesDatabase:
+    path: /usr/local/brl/data/alleleRegistry/dbReferences
+
+# parameters of allele database
+allelesDatabase:
+    path: /usr/local/brl/data/alleleRegistry/dbAlleles
+    threads: 6
+    ioTasks: 6
+    # max cache size in MB per each table/index
+    cache:
+        genomic: 128
+        protein: 32
+        sequence: 32
+        idCa: 256
+        idClinVarAllele: 16
+        idClinVarRCV: 16
+        idClinVarVariant: 16
+        idDbSnp: 512
+        idPa: 16
+
+# log file
+logFile:
+    path: /usr/local/brl/local/var/alleleRegistry.log
+
+# logins of users with "admin" priviliges 
+superusers: []
+
+# genboree stuff
+genboree:
+    mysql:
+        hostOrSocket: /usr/local/brl/local/var/mysql.sock
+        port: 0
+        user: genboree
+        password: genboree
+        dbName: genboree
+    settings: 
+        path: /usr/local/brl/data/conf/settings.yaml
+
+# externalSources
+externalSources:
+    mysql:
+        hostOrSocket: /usr/local/brl/local/var/mysql.sock
+        port: 0
+        user: externalSources
+        password: externalSources
+        dbName: externalSources

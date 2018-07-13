@@ -1,0 +1,4 @@
+dbKcHash_1g_32m		3.2 GB
+dbKcHash_1g_32m_2	9.9 GB
+dbKcHash4x_1g_32m	6.2 GB
+dbKcHash_1g_64m		13 GB

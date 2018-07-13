@@ -1,0 +1,3 @@
+Error for the following:
+Expected: ([19,20),*,YRHRIG) => [[([69,69),,TC),([71,73),TA,CACC)]]
+Found   : ([19,20),*,YRHRIG) => []

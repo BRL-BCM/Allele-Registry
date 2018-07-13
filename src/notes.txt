@@ -1,0 +1,123 @@
++ ADDR=http://localhost:16004
++ STRG=/media/storage1/CARsources
++ curl -X PUT 'http://localhost:16004/alleles.json?file=def+CA&fields=none' --data-binary @/media/storage1/CARsources/CAR/car_20170625.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  525M    0 76.5M  100  448M   189k  1112k  0:06:53  0:06:53 --:--:--     0
++ for i in 1 2 3 4 5 6 7 8
++ curl -X PUT 'http://localhost:16004/alleles.json?file=hgvs+dbSNP.rs&fields=none' --data-binary @/media/storage1/CARsources/dbSNP/dbsnp_1.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 1692M    0  160M  100 1531M   140k  1342k  0:19:28  0:19:28 --:--:--     0
++ for i in 1 2 3 4 5 6 7 8
++ curl -X PUT 'http://localhost:16004/alleles.json?file=hgvs+dbSNP.rs&fields=none' --data-binary @/media/storage1/CARsources/dbSNP/dbsnp_2.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 1692M    0  160M  100 1531M  88627   827k  0:31:36  0:31:36 --:--:--     0
++ for i in 1 2 3 4 5 6 7 8
++ curl -X PUT 'http://localhost:16004/alleles.json?file=hgvs+dbSNP.rs&fields=none' --data-binary @/media/storage1/CARsources/dbSNP/dbsnp_3.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 1692M    0  160M  100 1531M  63364   590k  0:44:17  0:44:17 --:--:--     0
++ for i in 1 2 3 4 5 6 7 8
++ curl -X PUT 'http://localhost:16004/alleles.json?file=hgvs+dbSNP.rs&fields=none' --data-binary @/media/storage1/CARsources/dbSNP/dbsnp_4.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 1693M    0  161M  100 1531M  50619   469k  0:55:41  0:55:41 --:--:--     0
++ for i in 1 2 3 4 5 6 7 8
++ curl -X PUT 'http://localhost:16004/alleles.json?file=hgvs+dbSNP.rs&fields=none' --data-binary @/media/storage1/CARsources/dbSNP/dbsnp_5.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 1693M    0  161M  100 1531M  43467   402k  1:04:55  1:04:55 --:--:--     0
++ for i in 1 2 3 4 5 6 7 8
++ curl -X PUT 'http://localhost:16004/alleles.json?file=hgvs+dbSNP.rs&fields=none' --data-binary @/media/storage1/CARsources/dbSNP/dbsnp_6.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 1693M    0  161M  100 1531M  40735   377k  1:09:19  1:09:19 --:--:--     0
++ for i in 1 2 3 4 5 6 7 8
++ curl -X PUT 'http://localhost:16004/alleles.json?file=hgvs+dbSNP.rs&fields=none' --data-binary @/media/storage1/CARsources/dbSNP/dbsnp_7.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 1695M    0  163M  100 1531M  34594   315k  1:22:47  1:22:47 --:--:--     0
++ for i in 1 2 3 4 5 6 7 8
++ curl -X PUT 'http://localhost:16004/alleles.json?file=hgvs+dbSNP.rs&fields=none' --data-binary @/media/storage1/CARsources/dbSNP/dbsnp_8.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 1694M    0  162M  100 1531M  27141   249k  1:44:51  1:44:51 --:--:--     0
+
+
+
++ ADDR=http://localhost:16004
++ STRG=/media/storage1/CARsources
++ for i in 1 2 3
++ curl -X PUT 'http://localhost:16004/alleles.json?file=MyVariantInfo_hg38.id&fields=none' --data-binary @/media/storage1/CARsources/myVariantInfo/mvi_hg38_1.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 1774M    0  298M  100 1475M   176k   870k  0:28:55  0:28:55 --:--:--     0
++ for i in 1 2 3
++ curl -X PUT 'http://localhost:16004/alleles.json?file=MyVariantInfo_hg38.id&fields=none' --data-binary @/media/storage1/CARsources/myVariantInfo/mvi_hg38_2.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 1771M    0  296M  100 1475M   175k   873k  0:28:50  0:28:50 --:--:--     0
++ for i in 1 2 3
++ curl -X PUT 'http://localhost:16004/alleles.json?file=MyVariantInfo_hg38.id&fields=none' --data-binary @/media/storage1/CARsources/myVariantInfo/mvi_hg38_3.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 1768M    0  292M  100 1475M   175k   885k  0:28:26  0:28:26 --:--:--     0
+
+
+
++ ADDR=http://localhost:16004
++ STRG=/media/storage1/CARsources
++ for i in 1 2 3 4
++ curl -X PUT 'http://localhost:16004/alleles.json?file=MyVariantInfo_hg19.id&fields=none' --data-binary @/media/storage1/CARsources/myVariantInfo/mvi_hg19_1.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 2103M    0  481M  100 1622M  89874   295k  1:33:37  1:33:37 --:--:--     0
++ for i in 1 2 3 4
++ curl -X PUT 'http://localhost:16004/alleles.json?file=MyVariantInfo_hg19.id&fields=none' --data-binary @/media/storage1/CARsources/myVariantInfo/mvi_hg19_2.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 2056M    0  434M  100 1622M  80848   294k  1:33:57  1:33:57 --:--:--     0
++ for i in 1 2 3 4
++ curl -X PUT 'http://localhost:16004/alleles.json?file=MyVariantInfo_hg19.id&fields=none' --data-binary @/media/storage1/CARsources/myVariantInfo/mvi_hg19_3.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 2020M    0  398M  100 1622M  87405   347k  1:19:35  1:19:35 --:--:--     0
++ for i in 1 2 3 4
++ curl -X PUT 'http://localhost:16004/alleles.json?file=MyVariantInfo_hg19.id&fields=none' --data-binary @/media/storage1/CARsources/myVariantInfo/mvi_hg19_4.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 2106M    0  483M  100 1622M  96307   315k  1:27:49  1:27:49 --:--:--     0
+
+
++ ADDR=http://localhost:16004
++ STRG=/media/storage1/CARsources
++ for i in 1 2 3
++ curl -X PUT 'http://localhost:16004/alleles.json?file=gnomAD.id&fields=none' --data-binary @/media/storage1/CARsources/gnomAD/gnomad_1.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 1917M    0  430M  100 1486M   105k   363k  1:09:43  1:09:43 --:--:--     0
++ for i in 1 2 3
++ curl -X PUT 'http://localhost:16004/alleles.json?file=gnomAD.id&fields=none' --data-binary @/media/storage1/CARsources/gnomAD/gnomad_2.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 1902M    0  415M  100 1486M   103k   370k  1:08:29  1:08:29 --:--:--     0
++ for i in 1 2 3
++ curl -X PUT 'http://localhost:16004/alleles.json?file=gnomAD.id&fields=none' --data-binary @/media/storage1/CARsources/gnomAD/gnomad_3.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 1946M    0  459M  100 1486M   118k   384k  1:06:02  1:06:02 --:--:--     0
++ curl -X PUT 'http://localhost:16004/alleles.json?file=ExAC.id&fields=none' --data-binary @/media/storage1/CARsources/ExAC/exac.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  202M    0 44.5M  100  157M  34057   117k  0:22:51  0:22:51 --:--:--     0
++ curl -X PUT 'http://localhost:16004/alleles.json?file=hgvs+ClinVar.alleleId+ClinVar.preferredName&fields=none' --data-binary @/media/storage1/CARsources/ClinVar/clinvar20170612_Alleles.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 68.9M    0 29.7M  100 39.1M   126k   167k  0:04:00  0:04:00 --:--:--     0
++ curl -X PUT 'http://localhost:16004/alleles.json?file=hgvs+ClinVar.variationId+ClinVar.RCV&fields=none' --data-binary @/media/storage1/CARsources/ClinVar/clinvar20170612_Variants.txt
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 14.3M    0 2136k  100 12.2M  19339   111k  0:01:53  0:01:53 --:--:--     0
+

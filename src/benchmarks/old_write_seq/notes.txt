@@ -1,0 +1,4 @@
+dbKcHash_1g_32m.txt	3.2 GB
+dbKcHash_512m_32m.txt	3.2 GB
+dbKcHash2_512m_32m	1.4 GB
+dbKcTree_1g_2m	1.9 GB

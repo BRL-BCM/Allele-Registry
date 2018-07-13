@@ -1,0 +1,27 @@
+{ 
+    "@context": {
+        "xsd": "http://www.w3.org/TR/xmlschema-2/#",
+        "gns": "http://schema.genome.network/",
+        "type": {  
+            "@id"  : "gns:isTypeOf"
+        },
+        "externalRecords" : { 
+            "@id"  : "gns:externalRecord",
+            "@type": "@id",
+            "@container": "@index"
+        },
+        "id" : {
+            "@id"  : "gns:hasIdentifier"
+        },
+        "gene" : { 
+            "@id"  : "gns:isAssignedTo",
+            "@type": "@id"
+        },
+        "referenceGenome" : {
+            "@id"  : "gns:referenceGenome"
+        },
+        "chromosome": {
+            "@id"  : "gns:chromosome"
+        }
+    }
+}

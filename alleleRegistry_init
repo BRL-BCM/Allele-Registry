@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# #########################
+# ENVIRONMENT
+# #########################
+DIR_SCRIPTS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source ${DIR_SCRIPTS}/conf_runtime.sh
+
+
+# #########################
+# MAIN
+# #########################
+
+RETVAL=0
+
+start() {
+    echo -n $"Starting Allele Registry:" $'\n'
+    ${DIR_TARGET}/alleleRegistry/alleleRegistry ${DIR_DATA}/conf/alleleRegistry.yaml
+    RETVAL=$?
+}
+
+start_readonly() {
+    echo -n $"Starting Allele Registry in READ-ONLY mode:" $'\n'
+    ${DIR_TARGET}/alleleRegistry/alleleRegistry ${DIR_DATA}/conf/alleleRegistry.yaml --read_only
+    RETVAL=$?
+}
+
+stop() {
+    echo -n $"Shutting down Allele Registry:" $'\n'
+    kill `ps -e | grep 'alleleRegistry$' | sed 's/^ *//g' | cut -d \  -f 1`
+    RETVAL=$?
+}
+
+echo ""
+case "$1" in
+  start)
+   start
+   ;;
+  start_readonly)
+   start_readonly
+   ;;
+  stop)
+   stop
+   ;;
+  restart)
+   stop
+   start
+   ;;
+  restart_readonly)
+   stop
+   start_readonly
+   ;;
+  *)
+   echo $"Usage: $0 {start|stop|restart|start_readonly|restart_readonly}"
+   RETVAL=1
+esac
+
+
+if [ $RETVAL = 0 ] ; then
+    echo "**SUCCESS**"
+else
+    echo "FAILURE: '$0 $1' command failed, check logs ( exit code $RETVAL )"
+fi
+
+exit $RETVAL 
+
