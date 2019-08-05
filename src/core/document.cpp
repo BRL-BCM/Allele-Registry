@@ -80,3 +80,82 @@ std::string Document::toString() const
 	}
 	throw std::logic_error("Unknown document type");
 }
+
+/*
+Following functions are added by Ronak Patel.
+A very preliminary JSON builder for simple intervals
+Complext interval needs an implementation
+*/
+std::string vrJSONBuilder(std::string const & sequence_digest, unsigned cstart, unsigned cend, std::string const & alternate)
+{
+
+	// Bad and ugly JSON generation.
+	// Just to get the specs rolling
+	std::string interval = "\"interval\":{\"end\":" + boost::lexical_cast<std::string>(cend) + 
+                                      ",\"start\":" + boost::lexical_cast<std::string>(cstart) + 
+                                      ",\"type\":" + "\"SimpleInterval\"}";
+
+  std::string location = "{" + interval + ",\"sequence_id\":\"" + sequence_digest + "\"," + "\"type\":\"SequenceLocation\"}";
+  std::string location_digest = trunc512(location);
+  std::string state = "\"state\":{\"sequence\":\"" + alternate + "\",\"type\":\"SequenceState\"},\"type\":\"Allele\"";
+  std::string allele_string = "{\"location\":\"" + location_digest + "\"," + state + "}";
+  std::string allele_digest = trunc512(allele_string);
+
+
+  std::string final_response = "{\"id\":\"ga4gh:VA."+allele_digest+"\"," 
+  + "\"location\":" + "{\"id\":\"ga4gh:SL." + location_digest + "\"," + 
+  interval + 
+  ",\"sequence_id\":\"ga4gh:SQ." + 
+  sequence_digest + 
+  "\"," + 
+  "\"type\":\"SequenceLocation\"}," +
+  state + 
+  "}";
+
+  return(final_response);
+
+}
+
+std::vector<std::string> DocumentActiveGenomicVariant::toVrString(ReferencesDatabase const * refDb, 
+	std::vector<ReferenceId> const & reference_sequence_ids) const {
+		// This is the place where each JSON string will be pushed.
+		std::vector<std::string> json_strings;
+
+		for(auto & rseqid: reference_sequence_ids){
+			std::string digest = "";
+			for(auto & def: definitionsOnGenomeBuilds){
+				if(rseqid == def.definition.refId){
+					std::vector<std::string> ref_seqs = refDb->getNames(rseqid);
+					digest = refDb->getDigestFromSequenceAccession(ref_seqs);
+					if(def.definition.modifications.size() != 1){
+						throw std::runtime_error("Haplotypes not supported yet!");
+					} else {
+						json_strings.push_back(vrJSONBuilder(digest, def.definition.modifications.front().region.left(), def.definition.modifications.front().region.right(), def.definition.modifications.front().newSequence));
+					}
+				}
+			}
+			for(auto & def: definitionsOnTranscripts){
+				if(rseqid == def.definition.refId){
+					std::vector<std::string> ref_seqs = refDb->getNames(rseqid);
+					digest = refDb->getDigestFromSequenceAccession(ref_seqs);
+					if(def.definition.modifications.size() != 1){
+						throw std::runtime_error("Haplotypes not supported yet!");
+					} else {
+						json_strings.push_back(vrJSONBuilder(digest, def.definition.modifications.front().region.left().position(), def.definition.modifications.front().region.right().position(), def.definition.modifications.front().newSequence));
+					}						
+				}
+			}
+			for(auto & def: definitionsOnGenesRegions){
+				if(rseqid == def.definition.refId){
+					std::vector<std::string> ref_seqs = refDb->getNames(rseqid);
+					digest = refDb->getDigestFromSequenceAccession(ref_seqs);
+					if(def.definition.modifications.size() != 1){
+						throw std::runtime_error("Haplotypes not supported yet!");
+					} else {
+						json_strings.push_back(vrJSONBuilder(digest, def.definition.modifications.front().region.left(), def.definition.modifications.front().region.right(), def.definition.modifications.front().newSequence));
+					}
+				}
+			}	
+		}
+		return(json_strings);
+}

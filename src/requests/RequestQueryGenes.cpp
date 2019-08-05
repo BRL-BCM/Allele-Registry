@@ -31,6 +31,8 @@ void RequestQueryGenes::process()
 			doc.hgncName = gene.hgncName;
 			doc.hgncSymbol = gene.hgncSymbol;
 			doc.ncbiId = gene.refSeqId;
+			std::string preferredTranscript = referencesDb->getPreferredTranscriptFromHGNCId(gene.hgncId);
+			if(preferredTranscript != "") doc.prefRefSeq = preferredTranscript;
 			docs.push_back(doc);
 			if ( docs.size() == fRange.limit ) break;
 		}

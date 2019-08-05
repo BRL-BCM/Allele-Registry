@@ -77,6 +77,18 @@ struct label {
 		, type
 		, variant
 		, variationId
+		, MANEPrefRefSeq
+		, transformations
+		, service
+		, algorithms
+		, circular_supported
+		, subsequence_limit
+		, supported_api_versions
+		, metadata
+		, alias
+		, aliases
+		, naming_authority
+		, trunc512
 	};
 	uint8_t value;
 	inline label(uint8_t v = label::__unknownField__) : value(v) {}

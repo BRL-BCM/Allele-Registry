@@ -1,7 +1,8 @@
 include Makefile.globals
 
 # for YAML and httpd
-CXXFLAGS+=-I./dependencies/yaml/include -I.
+#CXXFLAGS+=-I./dependencies/yaml/include -I.
+CXXFLAGS+=-I./dependencies/yaml/include -I. -g
 
 LIB_HTTP=-L. -lhttpp -lboost_thread -lssl -lcrypto 
 LIB_BOOST=-lboost_filesystem -lboost_system -lboost_timer -lboost_chrono -lboost_log

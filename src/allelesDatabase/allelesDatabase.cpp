@@ -631,7 +631,7 @@ void AllelesDatabase::queryVariants(callbackSendChunk callback, std::vector<std:
 	}
 
 	{ // ========== genomic
-		auto compRecords = [](RecordGenomicVariant* r1,RecordGenomicVariant* r2)->bool{ return (r1->definition < r2->definition); };
+		auto compRecords = [](RecordGenomicVariant* r1,RecordGenomicVariant* r2)->bool{ return (r1->definition == r2->definition); };
 		std::sort( recordsGenomic.begin(), recordsGenomic.end(), compRecords );
 		auto itEnd = std::unique( recordsGenomic.begin(), recordsGenomic.end(), compRecords );
 		for ( auto it = itEnd;  it != recordsGenomic.end();  ++it ) delete (*it);
@@ -655,7 +655,7 @@ void AllelesDatabase::queryVariants(callbackSendChunk callback, std::vector<std:
 	}
 
 	{ // ========== protein
-		auto compRecords = [](RecordProteinVariant* r1,RecordProteinVariant* r2)->bool{ return (r1->definition < r2->definition); };
+		auto compRecords = [](RecordProteinVariant* r1,RecordProteinVariant* r2)->bool{ return (r1->definition == r2->definition); };
 		std::sort( recordsProtein.begin(), recordsProtein.end(), compRecords );
 		auto itEnd = std::unique( recordsProtein.begin(), recordsProtein.end(), compRecords );
 		for ( auto it = itEnd;  it != recordsProtein.end();  ++it ) delete (*it);

@@ -49,6 +49,8 @@ void RequestFetchGene::process()
 		doc.gene().hgncName = gene.hgncName;
 		doc.gene().hgncSymbol = gene.hgncSymbol;
 		doc.gene().ncbiId = gene.refSeqId;
+		std::string preferredTranscript = referencesDb->getPreferredTranscriptFromHGNCId(gene.hgncId);
+		if(preferredTranscript != "") doc.gene().prefRefSeq = preferredTranscript;
 	}
 	setResponse(doc);
 }

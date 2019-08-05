@@ -36,10 +36,18 @@ REQUESTS+=RequestModifyLink
 REQUESTS+=RequestQueryAllelesByExternalSource
 REQUESTS+=RequestDeleteExternalSourceLinks
 REQUESTS+=RequestDeleteIdentifiers
+REQUESTS+=RequestCoordinateTransformation
+REQUESTS+=RequestCoordinateTransformations
+REQUESTS+=RequestSequenceServiceInfo
+REQUESTS+=RequestSequenceByDigest
+REQUESTS+=RequestVrAlleleForHgvs
+REQUESTS+=RequestMetadataForSequenceByDigest
 
 	
-libRequests.a: $(REQUESTS:=.o) OutputFormatter.o parsers.o identifiersTools.o proteins.o proteinVariantsToGenomic.o smithWaterman.o canonicalization.o hgvs.o
+libRequests.a: $(REQUESTS:=.o) OutputFormatter.o parsers.o identifiersTools.o proteins.o proteinVariantsToGenomic.o smithWaterman.o canonicalization.o hgvs.o coordinateTransformationHelper.o
 	ar -r $@ $^
+
+coordinateTransformationHelper: hgvs.o test_hgvs.o canonicalization.o OutputFormatter.o smithWaterman.o
 
 test_hgvs: hgvs.o test_hgvs.o $(DEP_REFERENCES_DATABASE)
 	$(MAKE_BIN) $(LIB_REFERENCES_DATABASE)

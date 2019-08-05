@@ -282,10 +282,15 @@ Dispatcher::Dispatcher(Configuration const & conf) : pim(new Pim(conf))
 	pim->get[ReqType("refseq", "{RSid}")]     = [](Params & p)->Request*{ return new RequestFetchReference   (p[0].asStr()); };
 	pim->get[ReqType("gene"  , "{GNid}")]            = [](Params & p)->Request*{ return new RequestFetchGene(p[0].asStr()); };
 	pim->get[ReqType("gene"  ).param("HGNC.symbol")] = [](Params & p)->Request*{ return new RequestFetchGene(p[0].asStr(), true); };
+	// Dispatcher for coordinate transformation
+	pim->get[ReqType("coordinateTransform").param("assembly").param("chr").param("start").param("end")] = [](Params & p)->Request*{ return new RequestCoordinateTransformation(p.range(),p[0].asStr(),p[1].asStr(),p[2].asUInt(),p[3].asUInt()); };	
 
 	// bulk operations
 	pim->post[ReqType("alleles",hasBody).param("file")] = [](Params & p){ return new RequestFetchAllelesByDefinition(p.body(),p[0].asStr(),false); };
 	pim->put [ReqType("alleles",hasBody).param("file")] = [](Params & p){ return new RequestFetchAllelesByDefinition(p.body(),p[0].asStr(),true); };
+
+	// bulk coordinate transformation
+	pim->post[ReqType("coordinateTransforms",hasBody).param("file")] = [](Params & p){ return new RequestCoordinateTransformations(p.body(),p[0].asStr()); };
 
 	// queries - alleles
 	pim->get[ReqType("alleles",supportPagination).param("name")] = [](Params & p){ return new RequestQueryAllelesById(p.range(),{p[0].asStr()}); };
@@ -350,6 +355,15 @@ Dispatcher::Dispatcher(Configuration const & conf) : pim(new Pim(conf))
 	pim->get    [ReqType("alleles",supportPagination).param("externalSource").param("p1").param("p2")]             = [](Params & p)->Request*{ return new RequestQueryAllelesByExternalSource(p.range(),p[0].asStr(),{p[1].asStr(),p[2].asStr()}); };
 	pim->get    [ReqType("alleles",supportPagination).param("externalSource").param("p1").param("p2").param("p3")] = [](Params & p)->Request*{ return new RequestQueryAllelesByExternalSource(p.range(),p[0].asStr(),{p[1].asStr(),p[2].asStr(),p[3].asStr()}); };
 	pim->delete_[ReqType("externalSource", "{name}", "links")]                                   = [](Params & p)->Request*{ return new RequestDeleteExternalSourceLinks(p[0].asStr()); };
+
+	// RefGet requests
+	pim->get[ReqType("sequence", "service-info")]     = [](Params & p)->Request*{ return new RequestSequenceServiceInfo( ); };
+	pim->get[ReqType("sequence", "{id}").param("start").param("end")]     = [](Params & p)->Request*{ return new RequestSequenceByDigest(p[0].asStr(),p[1].asStr(),p[2].asStr()); };
+	pim->get[ReqType("sequence", "{id}","metadata")]     = [](Params & p)->Request*{ return new RequestMetadataForSequenceByDigest(p[0].asStr()); };
+
+	// vr Allele
+	pim->get[ReqType("vrAllele").param("hgvs")] = [](Params & p)->Request*{ return new RequestVrAlleleForHgvs(p[0].asStr()); };
+
 }
 
 Dispatcher::~Dispatcher()
@@ -378,6 +392,12 @@ void Dispatcher::processRequest
 	bool gbToken = false;
 	bool gbTime  = false;
 	std::string gbLoginValue = "";
+
+	// std::cerr << "This is path of the request from dispatcher => " << httpPath << std::endl;
+	// std::cerr << std::regex_match(httpPath, std::regex r("sequence/[a-zA-Z0-9-\\]+$")) << std::endl;
+
+
+
 	for (auto const & kv: parameters) {
 		if ( kv.first == "gbLogin" ) {
 			gbLogin = true;
@@ -416,6 +436,17 @@ void Dispatcher::processRequest
 				path.back().resize(i);
 			}
 		}	// ------------------------------
+
+		// This is a hack when the path is like sequence/SzCTylwtUXBoMOhBpXuHhYS80iHSwUTQ
+		// The response format is set to txt rather than JSON
+		// If you are extending /sequence/ path please make sure that this still holds true 
+		if(path.size() == 2 && path[0] == "sequence"){
+			if(path[1] != "service-info"){
+				protocol = "txt";
+			}
+		}
+		// Hack ends here.
+
 
 
 		if (protocol != "") {

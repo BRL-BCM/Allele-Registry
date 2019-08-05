@@ -35,10 +35,32 @@ struct Gene {
 	unsigned refSeqId = 0;
 	std::string hgncName;
 	std::string hgncSymbol;
+	std::string preferredTranscript;
 	std::string ensemblId;
 	std::vector<std::string> otherSymbols;
 	std::vector<std::string> obsoleteSymbols;
 	std::vector<ReferenceId> assignedReferences;
+};
+
+/*
+ Mane is created to support use of preferred transcripts and make it available through /gene/ access point.
+ Mane Makes the data available at ftp://ftp.ncbi.nlm.nih.gov/refseq/MANE/MANE_human/
+ The file that is parsed is gunzipped MANE.GRCh38.v0.5.summary.txt.gz
+ This part is implemented after Piotr (First c++ implementer of allele registry) Left
+*/
+struct Mane {
+	// std::string ncbiGeneId;
+	// std::string ensemblGene;
+	unsigned hgncId;
+	std::string hgncSymbol;
+	// std::string geneName;
+	std::string refSeqAccession;
+	std::string ensemblAccession;
+	// std::string maneStatus;
+	// std::string gRCh38Chromosome;
+	// unsigned chromsomeStart;
+	// unsigned chromosomeEnd;
+	// char strand;
 };
 
 struct ReferenceMetadata
@@ -90,6 +112,10 @@ public:
 	std::vector<ReferenceId> getReferencesByName(std::string const & name) const;
 	std::vector<ReferenceId> getReferencesByGene(std::string const & hgncGeneSymbol) const;
 	std::vector<ReferenceId> getReferencesByGene(unsigned id) const;
+	// For Mane trasncripts 
+	std::string getPreferredTranscriptFromHGNCSymbol(std::string const & symbol) const;
+	std::string getPreferredTranscriptFromHGNCId(unsigned hgncId) const;
+
 	// Returns CDS associated with given refId (it must be transcript)
 	RegionCoordinates getCDS(ReferenceId refId) const;
 	// Return sequence length (unspliced)
@@ -105,6 +131,13 @@ public:
 	std::vector<Gene> const & getGenes() const;
 	ReferenceId getTranscriptForProtein(ReferenceId proteinId) const;
 	ReferenceId getReferenceIdFromProteinAccessionIdentifier(uint64_t proteinAccessionIdentifier) const;
+
+	// Convenience function for digestToSequenceMapping (for /sequence/{id})
+	std::string getSubSequenceFromDigest(std::string const & digest, unsigned cstart, unsigned cend) const;
+	// Convenience function for sequenceIdToDigestMapping (for /sequence/{id}/metadata)
+	std::vector<std::string> getSequenceIdentifiersForDigest(std::string const & digest) const;
+	// Get digest for a sequence accession
+	std::string getDigestFromSequenceAccession(std::vector<std::string> const & refseq_id) const;
 	// Return references
 //	std::vector<ReferenceMetadata> const & getReferencesMetadata() const;
 };

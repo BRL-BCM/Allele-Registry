@@ -401,4 +401,81 @@ public:
 	virtual ~RequestDeleteIdentifiers();
 };
 
+/* Requests implemented by Ronak. The above request are by Piotr Pawliczek */
+
+class RequestCoordinateTransformation : public Request
+{
+private:
+    ResultSubset fRange;
+    std::string assembly;
+    std::string chr;
+    unsigned int cstart; 
+    unsigned int cend; 
+    ReferencesDatabase const * seqDb;
+protected:
+    virtual void process();
+public:
+    RequestCoordinateTransformation(ResultSubset const & rs, std::string const & assembly,std::string const & chr,unsigned int const & cstart, unsigned int const & cend);
+    virtual ~RequestCoordinateTransformation();
+};
+
+class RequestCoordinateTransformations : public Request
+{
+private:
+	struct Pim;
+	Pim * pim;
+protected:
+	virtual void process();
+public:
+	RequestCoordinateTransformations(std::shared_ptr<std::vector<char>> pBody, std::string const & columnsDefinitions); // payload
+    virtual ~RequestCoordinateTransformations();
+};
+
+class RequestSequenceServiceInfo : public Request 
+{
+private:
+	struct Pim;
+	Pim * pim;
+protected:
+	virtual void process();
+public:
+	RequestSequenceServiceInfo();
+	virtual ~RequestSequenceServiceInfo();
+};
+
+class RequestSequenceByDigest : public Request
+{
+private: 
+	std::string sequenceDigestId;
+	std::string cstart;
+	std::string cend;
+protected:
+	virtual void process();
+public:
+	RequestSequenceByDigest(std::string const & pId, std::string const & cstart, std::string const & cend);	
+	virtual ~RequestSequenceByDigest();	
+};
+
+class RequestVrAlleleForHgvs : public Request
+{
+private:
+	std::string fHgvs;
+protected:
+	virtual void process();
+public:
+	RequestVrAlleleForHgvs(std::string const & hgvs);
+	virtual ~RequestVrAlleleForHgvs();
+};
+
+class RequestMetadataForSequenceByDigest : public Request
+{
+private: 
+	std::string digest;
+protected:
+	virtual void process();
+public:
+	RequestMetadataForSequenceByDigest(std::string const & qDigest);
+	virtual ~RequestMetadataForSequenceByDigest();
+};
+
 #endif /* REQUESTS_HPP_ */

@@ -5,7 +5,7 @@
 # #########################
 DIR_SCRIPTS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source ${DIR_SCRIPTS}/conf_runtime.sh
-
+AR_STOPPED_FILE=${DIR_DATA}/alleleRegistry/locks/stopped
 
 # #########################
 # MAIN
@@ -14,21 +14,75 @@ source ${DIR_SCRIPTS}/conf_runtime.sh
 RETVAL=0
 
 start() {
+    # FILE CHECK, SETUP: Does the "server intentionally stopped" file exist?
+          if [[ -e $AR_STOPPED_FILE ]]; then
+            # Need to WAIT (block) until we can get a lock on it. This way we know nothing else is messing with it too.
+            printf "Will wait for lock on ${AR_STOPPED_FILE} ...\n"
+            exec 723< $AR_STOPPED_FILE
+            flock -x 723
+            haveLock=1
+            printf "...lock obtained, will continue\n"
+          else
+            haveLock=0
+          fi
     echo -n $"Starting Allele Registry:" $'\n'
     ${DIR_TARGET}/alleleRegistry/alleleRegistry ${DIR_DATA}/conf/alleleRegistry.yaml
     RETVAL=$?
+    # FILE CHECK, CLEANUP: Do we need to remove the lock we obtained?
+          if [[ $haveLock = 1 ]]; then
+            flock -u 723
+            printf "Lock released\n"
+          fi
+          # Regardless, remove the "server is intentionally stopped" file
+          rm -f $AR_STOPPED_FILE
 }
 
 start_readonly() {
+    # FILE CHECK, SETUP: Does the "server intentionally stopped" file exist?
+          if [[ -e $AR_STOPPED_FILE ]]; then
+            # Need to WAIT (block) until we can get a lock on it. This way we know nothing else is messing with it too.
+            printf "Will wait for lock on ${AR_STOPPED_FILE} ...\n"
+            exec 723< $AR_STOPPED_FILE
+            flock -x 723
+            haveLock=1
+            printf "...lock obtained, will continue\n"
+          else
+            haveLock=0
+          fi
     echo -n $"Starting Allele Registry in READ-ONLY mode:" $'\n'
     ${DIR_TARGET}/alleleRegistry/alleleRegistry ${DIR_DATA}/conf/alleleRegistry.yaml --read_only
     RETVAL=$?
+    # FILE CHECK, CLEANUP: Do we need to remove the lock we obtained?
+          if [[ $haveLock = 1 ]]; then
+            flock -u 723
+            printf "Lock released\n"
+          fi
+          # Regardless, remove the "server is intentionally stopped" file
+          rm -f $AR_STOPPED_FILE
 }
 
 stop() {
+    # FILE CHECK, SETUP: Does the "server intentionally stopped" file already exist?
+          if [[ -e $AR_STOPPED_FILE ]]; then
+            # Need to WAIT (block) until we can get a lock on it. This way we know nothing else is messing with it too.
+            printf "Will wait for lock on ${AR_STOPPED_FILE} ...\n"
+            exec 723< $AR_STOPPED_FILE
+            flock -x 723
+            haveLock=1
+            printf "...lock obtained, will continue\n"
+          else
+            haveLock=0
+          fi
     echo -n $"Shutting down Allele Registry:" $'\n'
     kill `ps -e | grep 'alleleRegistry$' | sed 's/^ *//g' | cut -d \  -f 1`
     RETVAL=$?
+    # FILE CHECK, CLEANUP: Do we need to remove the lock we obtained?
+          if [[ $haveLock = 1 ]]; then
+            flock -u 723
+            printf "Lock released\n"
+          fi
+          # Regardless, ensure the "server is intentionally stopped" file is present
+          touch $AR_STOPPED_FILE
 }
 
 echo ""

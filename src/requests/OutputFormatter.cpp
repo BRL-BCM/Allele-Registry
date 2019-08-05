@@ -134,6 +134,25 @@ OutputFormatter::OutputFormatter(documentType docType) : pim(new Pim)
 		docGene[label::externalRecords][label::HGNC][label::symbol].addNode();
 		docGene[label::externalRecords][label::NCBI][label::_at_id].addNode();
 		docGene[label::externalRecords][label::NCBI][label::id].addNode();
+		docGene[label::externalRecords][label::MANEPrefRefSeq][label::_at_id].addNode();
+		docGene[label::externalRecords][label::MANEPrefRefSeq][label::id].addNode();
+	} else if (docType == documentType::coordinateTransform) {
+		jsonBuilder::DocumentStructure<label> & docCoordinates = pim->docSchema;
+		docCoordinates[label::_at_context].addNode();
+		docCoordinates[label::_at_id     ].addNode();
+		docCoordinates[label::transformations].addNode();
+		docCoordinates[label::transformations][label::referenceGenome].addNode();
+		docCoordinates[label::transformations][label::chromosome].addNode();
+		docCoordinates[label::transformations][label::start].addNode();
+		docCoordinates[label::transformations][label::end].addNode();
+	} else if (docType == documentType::ga4ghSeqMetadata){
+		jsonBuilder::DocumentStructure<label> & docSeqMetadata = pim->docSchema;
+		docSeqMetadata[label::metadata].addNode();
+		docSeqMetadata[label::metadata][label::trunc512].addNode();
+		docSeqMetadata[label::metadata][label::length].addNode();
+		docSeqMetadata[label::metadata][label::aliases].addNode();
+		docSeqMetadata[label::metadata][label::aliases][label::alias].addNode();
+		docSeqMetadata[label::metadata][label::aliases][label::naming_authority].addNode();
 	}
 }
 
@@ -506,11 +525,11 @@ std::string OutputFormatter::createOutput(Document const & doc) const
 			out[label::externalRecords][label::Ensembl][label::_at_id] = "http://ensembl.org/Homo_sapiens/Transcript/Summary?t=" + ref.ensemblId;
 			out[label::externalRecords][label::Ensembl][label::id] = ref.ensemblId;
 		}
-//TODO
-//		out[label::externalRecords][label::LRG][label::_at_id] = true;
-//		out[label::externalRecords][label::LRG][label::id] = true;
-//		out[label::externalRecords][label::GenBank][label::_at_id] = true;
-//		out[label::externalRecords][label::GenBank][label::id] = true;
+		//TODO
+		//		out[label::externalRecords][label::LRG][label::_at_id] = true;
+		//		out[label::externalRecords][label::LRG][label::id] = true;
+		//		out[label::externalRecords][label::GenBank][label::_at_id] = true;
+		//		out[label::externalRecords][label::GenBank][label::id] = true;
 		// ============== undocumented
 		if (ref.sequence        != "") out[label::sequence       ] = ref.sequence;
 		if (ref.splicedSequence != "") out[label::splicedSequence] = ref.splicedSequence;
@@ -530,7 +549,80 @@ std::string OutputFormatter::createOutput(Document const & doc) const
 			out[label::externalRecords][label::NCBI][label::_at_id] = "http://www.ncbi.nlm.nih.gov/gene/" + boost::lexical_cast<std::string>(gene.ncbiId);
 			out[label::externalRecords][label::NCBI][label::id    ] = gene.ncbiId;
 		}
-	}
+		if(gene.prefRefSeq != "") { 
+			out[label::externalRecords][label::MANEPrefRefSeq][label::_at_id] = "https://www.ncbi.nlm.nih.gov/nuccore/" + boost::lexical_cast<std::string>(gene.prefRefSeq);
+			out[label::externalRecords][label::MANEPrefRefSeq][label::id] = gene.prefRefSeq;
+		}
+	} else if (doc.isCoordinateTransform()) {
+		DocumentCoordinates const & coordinates = doc.coordinateTransform();
+
+		out[label::_at_id] = "_:CTRM";
+		out[label::_at_context] = "http://" + pim->carURI + "/schema/allele.jsonld";
+		if(coordinates.grch38Assembly != ""){	
+			out[label::transformations].push_back([&](jsonBuilder::NodeOfJsonTree<label> map1){
+					map1[label::referenceGenome] = coordinates.grch38Assembly;
+					map1[label::chromosome] = coordinates.grch38Chr;
+					map1[label::start] = coordinates.grch38Start;
+					map1[label::end] = coordinates.grch38End;
+			});
+		}
+		if(coordinates.grch37Assembly != ""){
+			out[label::transformations].push_back([&](jsonBuilder::NodeOfJsonTree<label> map1){
+					map1[label::referenceGenome] = coordinates.grch37Assembly;
+					map1[label::chromosome] = coordinates.grch37Chr;
+					map1[label::start] = coordinates.grch37Start;
+					map1[label::end] = coordinates.grch37End;
+			});
+		}
+		if(coordinates.ncbi36Assembly != ""){
+			out[label::transformations].push_back([&](jsonBuilder::NodeOfJsonTree<label> map1){
+					map1[label::referenceGenome] = coordinates.ncbi36Assembly;
+					map1[label::chromosome] = coordinates.ncbi36Chr;
+					map1[label::start] = coordinates.ncbi36Start;
+					map1[label::end] = coordinates.ncbi36End;
+			});
+		}
+  } else if(doc.isGa4ghSeqServiceInfo()) {
+  	DocumentSequenceServiceInfo const & service_info =  doc.ga4ghSeqServiceInfo();
+  	// out[lab]
+  	out[label::service][label::circular_supported] = service_info.circular_supported;
+  	
+  	for(auto & algorithm: service_info.algorithms){ 
+  	  		out[label::service][label::algorithms].push_back(algorithm);
+  	}
+
+  	out[label::service][label::subsequence_limit] = service_info.subsequence_limit;
+
+
+  	for(auto & supported_api_version: service_info.supported_api_versions){
+  	  		out[label::service][label::supported_api_versions].push_back(supported_api_version);
+  	  	}
+  	
+  } else if(doc.isGa4ghSeqMetadata()) {
+  	DocumentGa4ghSeqMetadata const & metadata = doc.ga4ghSeqMetadata();
+  	out[label::metadata][label::trunc512] = metadata.trunc512;
+  	out[label::metadata][label::length] = metadata.seqLength;
+  	// add aliases
+  	for(auto & alias: metadata.aliases){
+	  	out[label::metadata][label::aliases].push_back([&](jsonBuilder::NodeOfJsonTree<label> map1){
+	  		
+	  		map1[label::alias] = alias;
+
+		    switch(alias[0]){
+		      case 'N' : map1[label::naming_authority] = "NCBI";
+		        break;
+		      case 'X' : map1[label::naming_authority] = "NCBI";
+		        break;
+		      case 'E' : map1[label::naming_authority] = "ENSEMBL";
+		        break;
+		      case 'L' : map1[label::naming_authority] = "LRG";
+		        break;
+		      default: map1[label::naming_authority] = "UNKNOWN"; 
+		    }
+	  	});
+  	}
+  };
+
 
 	jsonDoc.removeEmptyArraysAndObjects();
 	std::string r;

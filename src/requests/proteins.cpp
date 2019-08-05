@@ -21,14 +21,38 @@ inline bool convertToProteinVariantsBeforeTer
 	, std::vector<PlainSequenceModification> const & cluster           // variants on transcript - spliced
 	, std::vector<std::string>                     & outPartialHgvses  // output is added here
 	, std::vector<PlainSequenceModification>       & outVarsInProtein  // output is added here
+	, variantCategory category // the category of variant (needed to find if duplication)
 	)
 {
 	RegionCoordinates region( cluster.front().region.left(), cluster.back().region.right() );
 	unsigned const CDSstart = refDb->getCDS(refId).left();
-	region.decLeftPosition( (region.left()-CDSstart ) % 3 );
-	region.incRightPosition( (3-((region.right()-CDSstart)%3)) % 3 );
-	std::string seq = refDb->getSplicedSequence(refId, region);
-	std::string seq2 = applyVariantsToTheSequence(seq, region.left(), cluster);
+
+    std::string seq = "";
+    std::string seq2 = "";
+
+    if(category == variantCategory::duplication){
+        std::string seqToCheck;
+        RegionCoordinates regionToFetchSequence(cluster.front().region.left() - cluster.front().newSequence.size(), cluster.front().region.right());
+        seqToCheck = refDb->getSplicedSequence(refId, regionToFetchSequence);
+        auto copyCluster = cluster;
+        if(seqToCheck != cluster.front().newSequence) {
+           // need to make copy of cluster 
+           // adjust the sequence
+            copyCluster.front().newSequence = seqToCheck;
+        }
+        // make the codon complete and calculate protein variations
+        region.decLeftPosition( (region.left()-CDSstart ) % 3 );
+        region.incRightPosition( (3-((region.right()-CDSstart)%3)) % 3 );
+        seq = refDb->getSplicedSequence(refId, region);
+        seq2 = applyVariantsToTheSequence(seq, region.left(), copyCluster);
+    }
+    else {
+        region.decLeftPosition( (region.left()-CDSstart ) % 3 );
+        region.incRightPosition( (3-((region.right()-CDSstart)%3)) % 3 );
+        seq = refDb->getSplicedSequence(refId, region);
+        seq2 = applyVariantsToTheSequence(seq, region.left(), cluster);
+    }
+
 	ReferenceId const proteinId(refDb->getMetadata(refId).proteinId);
 
 	// convert to proteins
@@ -100,16 +124,38 @@ inline void convertToProteinVariantWithTer
 	, std::vector<PlainSequenceModification> const & cluster           // variants on transcript - spliced
 	, std::vector<std::string>                     & outPartialHgvses  // output is added here
 	, std::vector<PlainSequenceModification>       & outVarsInProtein  // output is added here
+	, variantCategory category
 	)
 {
 	RegionCoordinates region( cluster.front().region.left(), cluster.back().region.right() );
 	unsigned const CDSstart  = refDb->getCDS(refId).left();
 	unsigned const CDSlength = refDb->getCDS(refId).length();
-	region.decLeftPosition( (region.left()-CDSstart ) % 3 );
-	region.setRight( std::min(refDb->getMetadata(refId).splicedLength, region.right() + 3*30) );   // TODO - workaround for efficiency - max 30 aa are checked
+    // process duplications differently
+    std::string seq = "";
+    std::string seq2 = "";
 
-	std::string seq = refDb->getSplicedSequence(refId, region);
-	std::string seq2 = applyVariantsToTheSequence(seq, region.left(), cluster);
+    if(category == variantCategory::duplication){
+        // std::string sequenceToCheck = "";
+        RegionCoordinates regionToFetchSequence(cluster.front().region.left() - cluster.front().newSequence.size(), cluster.front().region.right());
+        std::string seqToCheck = refDb->getSplicedSequence(refId, regionToFetchSequence);
+        // need to make copy of cluster 
+        auto copyCluster = cluster;
+        if(seqToCheck != cluster.front().newSequence) {
+		    // adjust the sequence
+	        copyCluster.front().newSequence = seqToCheck;
+        }
+	    // make the codon complete and calculate protein variations
+	    region.decLeftPosition( (region.left()-CDSstart ) % 3 );
+        region.setRight( std::min(refDb->getMetadata(refId).splicedLength, region.right() + 3*30) );   // TODO - workaround for efficiency - max 30 aa are checked            
+        seq = refDb->getSplicedSequence(refId, region);
+        seq2 = applyVariantsToTheSequence(seq, region.left(), copyCluster);
+    }
+    else {
+        region.decLeftPosition( (region.left()-CDSstart ) % 3 );
+		region.setRight( std::min(refDb->getMetadata(refId).splicedLength, region.right() + 3*30) );   // TODO - workaround for efficiency - max 30 aa are checked
+        seq = refDb->getSplicedSequence(refId, region);
+        seq2 = applyVariantsToTheSequence(seq, region.left(), cluster);
+    }	
 
 	seq = seq.substr( 0, CDSlength - (region.left()-CDSstart) ); // cut stuff behind CDS
 
@@ -195,6 +241,8 @@ bool calculateProteinVariation
 			}
 		}
 
+        // For later reference, store the category
+        std::vector<variantCategory> categoryForChecksLater;
 		// ====== remove variants before CDS
 		std::vector<PlainSequenceModification> varsInCDS; // in spliced coordinates
 		for (auto const & var: varsInSplicedRegions) {
@@ -202,6 +250,8 @@ bool calculateProteinVariation
 			if (ra.region.left() >= transMetadata.CDS.left() + 3) {
 				// after START CODON
 				varsInCDS.push_back(ra);
+				// add category to the vector
+				categoryForChecksLater.push_back(var.category);
 			} else if (var.leftAligned().region.right() <= transMetadata.CDS.left()) {
 				// before START CODON - TODO: what if it creates new start codon ?
 				continue;
@@ -250,13 +300,13 @@ bool calculateProteinVariation
 			currentFrameshift = ( currentFrameshift + abs(itV->newSequence.size(),itV->originalSequence.size()) ) % 3;
 			// if there is no frameshift, the cluster can be processed, otherwise we go to the next variant
 			if (currentFrameshift == 0) {
-				bool const stopCodon = convertToProteinVariantsBeforeTer( refDb, transcriptVar.refId, currentVarsCluster, partialHgvses, varsInProtein );
+				bool const stopCodon = convertToProteinVariantsBeforeTer( refDb, transcriptVar.refId, currentVarsCluster, partialHgvses, varsInProtein , categoryForChecksLater[itV - varsInCDS.begin()]);
 				currentVarsCluster.clear();
 				// if stop codon was reached, we are done
 				if (stopCodon) break;
 			}
 		}
-		if ( ! currentVarsCluster.empty() ) convertToProteinVariantWithTer( refDb, transcriptVar.refId, currentVarsCluster, partialHgvses, varsInProtein );
+		if ( ! currentVarsCluster.empty() ) convertToProteinVariantWithTer( refDb, transcriptVar.refId, currentVarsCluster, partialHgvses, varsInProtein , categoryForChecksLater.front());
 
 		// ====== calculate hgvs
 		outGeneralHgvs = proteinName + ":p.";

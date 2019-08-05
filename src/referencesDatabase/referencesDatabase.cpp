@@ -198,6 +198,16 @@ struct ReferencesDatabase::Pim
 	std::vector<Gene> genes; // by hgnc id
 	std::map<std::string, std::vector<unsigned>> genesBySymbol; // symbol -> hgncId
 
+	// Data store from Mane files
+	std::vector<Mane> maneTranscripts;
+
+	// Data stored from Sequnce id to digest and vice versa
+	std::map<std::string, std::string> idToDigest;
+	std::multimap<std::string, std::string> digestToIds;
+
+ 	std::map<std::string, std::string> preferredTranscriptByHgncSymbol;
+	// std::map<std::string, std::string> preferredTranscriptByHgncId;
+
 	std::vector<ReferenceMetadata> metadata;  // by RefId
 
 	std::map<uint64_t,ReferenceId> proteinAccessionIdentifier2referenceId;
@@ -222,9 +232,13 @@ struct ReferencesDatabase::Pim
 	void readFromFile( std::string const & filename, std::vector<std::string> & names, std::vector<GeneralSeqAlignment> & target, bool transcripts );
 	void readNames( std::string const & filename );
 	void readGenes( std::string const & filename );
+	// Read Mane File
+	void readMane(std::string const & filename);
 	void readTranscriptMetadata( std::string const & filename );
 	void unspliceTranscripts();
 	void buildAlignmentsToMainGenome();
+	// Read file storing digests
+	void readDigest(std::string const & filename);
 	GeneralSeqAlignment calculateGeneralAlignment(GeneralSeqAlignment const & reference, RegionCoordinates const & region, bool exactTargetEdges = false) const;
 };
 
@@ -450,6 +464,97 @@ void ReferencesDatabase::Pim::readGenes( std::string const & filename )
 	}
 }
 
+void ReferencesDatabase::Pim::readMane(std::string const & filename)
+{
+	LogScopeWallTime scopeLog("Parse " + filename);
+	unsigned const colNcbiGeneId = 0;
+	unsigned const colEnsemblGene = 1;
+	unsigned const colHgncId = 2;
+	unsigned const colHgncSymbol = 3;
+	unsigned const colGeneName = 4;
+	unsigned const colRefSeqAccession = 5;
+	unsigned const colEnsemblAccession = 6;
+	unsigned const colManeStatus = 7;
+	unsigned const colGRCh38Chromosome = 8;
+	unsigned const colChromsomeStart = 9;
+	unsigned const colChromosomeEnd = 10;
+	unsigned const colStrand = 11;
+
+	std::vector<std::string> colsNames(12);
+
+	colsNames[colNcbiGeneId] = "#NCBI_GeneID";
+	colsNames[colEnsemblGene] = "Ensembl_Gene";
+	colsNames[colHgncId] = "HGNC_ID";
+	colsNames[colHgncSymbol] = "symbol";
+	colsNames[colGeneName] = "name";
+	colsNames[colRefSeqAccession] = "RefSeq";
+	colsNames[colEnsemblAccession] = "Ensembl_ID";
+	colsNames[colManeStatus] = "MANE_status";
+	colsNames[colGRCh38Chromosome] = "GRCh38_chr";
+	colsNames[colChromsomeStart] = "chr_start";
+	colsNames[colChromosomeEnd] = "chr_end";
+	colsNames[colStrand] = "chr_strand";
+
+    try {
+		TabSeparatedFile file(filename, colsNames);	
+
+		for ( std::vector<std::string> r;  file.readRecord(r); ) {
+			// Assuming the first five character of the column colHgncId is HGNC:
+			std::string hgnc_id_full = r[colHgncId];
+			if(hgnc_id_full != ""){
+				// std::cerr << hgnc_id_full << std::endl;
+				unsigned const hgnc_id = boost::lexical_cast<unsigned>(hgnc_id_full.substr(5,hgnc_id_full.size()));
+				if (maneTranscripts.size() <= hgnc_id) maneTranscripts.resize(hgnc_id+1);
+				maneTranscripts[hgnc_id].hgncId = hgnc_id;
+				maneTranscripts[hgnc_id].refSeqAccession = r[colRefSeqAccession]; 		
+				maneTranscripts[hgnc_id].ensemblAccession = r[colEnsemblAccession]; 		
+				maneTranscripts[hgnc_id].hgncSymbol = r[colHgncSymbol]; 
+			}
+			else {
+				std::cerr << "WARNING: No HGNC Symbol for NCBI => " << r[colNcbiGeneId]  << "ENBSEMBL => " << r[colEnsemblAccession] ;
+			}
+		}
+
+		for (auto && maneTranscript : maneTranscripts) {
+			preferredTranscriptByHgncSymbol.insert({ maneTranscript.hgncSymbol, maneTranscript.refSeqAccession }); 
+		}
+
+    } catch (std::exception const & e) {
+		throw std::runtime_error("Could not parse tab separted file: (" + std::string(e.what()) +  ")" + filename);
+	} 
+}
+
+void ReferencesDatabase::Pim::readDigest(std::string const & filename){
+	LogScopeWallTime scopeLog("Parse " + filename);
+	unsigned const colSequenceId = 0;
+	unsigned const colTrunc512Digest = 1;
+
+	std::vector<std::string> colsNames(2);
+
+	colsNames[colSequenceId] = "#Sequence";
+	colsNames[colTrunc512Digest] = "TRUNC512";
+
+  try {
+		TabSeparatedFile file(filename, colsNames);	
+
+		for ( std::vector<std::string> r;  file.readRecord(r); ) {
+			// Assuming the first five character of the column colHgncId is HGNC:
+			std::string sequence_identifier = r[colSequenceId];
+			std::string sequence_digest = r[colTrunc512Digest];
+
+			if(sequence_identifier != "" && sequence_digest != ""){
+				idToDigest.insert(std::pair<std::string, std::string>(sequence_identifier, sequence_digest));
+				digestToIds.insert(std::pair<std::string, std::string>(sequence_digest, sequence_identifier));
+			}
+			else {
+				std::cerr << "WARNING: No sequence id or digest in " << filename << " will not import sequence "<< std::endl;
+			}
+		}
+	} catch (std::exception const & e) {
+		throw std::runtime_error("Could not parse tab separted file: (" + std::string(e.what()) +  ")" + filename);
+	}
+}
+
 void ReferencesDatabase::Pim::readNames( std::string const & filename )
 {
 	LogScopeWallTime scopeLog("Parse " + filename);
@@ -559,6 +664,13 @@ void ReferencesDatabase::Pim::readTranscriptMetadata( std::string const & filena
 					rm.geneId = metadata[refId].geneId;
 					metadata.push_back(rm);
 				} else {
+					proteins2transcripts.push_back(ReferenceId(refId));
+					metadata[refId].proteinId = names.size();
+					name2refSeq[name] = names.size();
+					names.push_back({name});
+					ReferenceMetadata rm;
+					rm.geneId = metadata[refId].geneId;
+					metadata.push_back(rm);
 					std::cerr << "WARNING: Duplicated protein: " << name << "\n";
 				}
 			}
@@ -805,6 +917,9 @@ ReferencesDatabase::ReferencesDatabase(std::string const & pPath) : pim(new Pim)
 	pim->readGenes( (path / "hgnc.txt").string() );
 	pim->readTranscriptMetadata( (path / "metadata_transcripts.txt").string() );
 	pim->readNames( (path / "refs.txt").string() );
+	// read Mane files
+	pim->readMane( (path / "mane.txt").string() );
+	pim->readDigest( (path / "trunc512_digests.txt").string() );
 
 	// preprocess data
 	pim->unspliceTranscripts();
@@ -1358,6 +1473,16 @@ std::vector<Gene> const & ReferencesDatabase::getGenes() const
 	return pim->genes;
 }
 
+std::string ReferencesDatabase::getPreferredTranscriptFromHGNCSymbol(std::string const & symbol) const
+{
+    return (pim->preferredTranscriptByHgncSymbol.find(symbol))->second;
+}
+
+std::string ReferencesDatabase::getPreferredTranscriptFromHGNCId(unsigned hgncId) const
+{
+	return (pim->maneTranscripts.at(hgncId)).refSeqAccession;
+}
+
 std::vector<ReferenceId> ReferencesDatabase::getReferencesByName(std::string const & name) const
 {
 	std::vector<ReferenceId> refsId;
@@ -1401,6 +1526,62 @@ ReferenceId ReferencesDatabase::getReferenceIdFromProteinAccessionIdentifier(uin
 		throw std::logic_error("There is no reference with given protein access identifier: " + std::to_string(proteinAccessionIdentifier));
 	}
 	return it->second;
+}
+
+std::string ReferencesDatabase::getSubSequenceFromDigest(std::string const & digest, unsigned cstart, unsigned cend) const
+{
+
+	if (cstart >= cend) {
+		throw std::logic_error("Start must be less than end coordinate.");
+	} else{
+		RegionCoordinates coords(cstart, cend);
+		unsigned int total_hits = pim->digestToIds.count(digest);
+		std::multimap<std::string, std::string>::const_iterator ids = pim->digestToIds.find(digest);
+
+		for (unsigned int i = 0; i < total_hits; i++)
+    {
+      std::vector<ReferenceId> localRefIds;
+    	localRefIds = getReferencesByName(ids->second);
+			if(localRefIds.size() != 0){
+				std::string subseq = getSequence(localRefIds.front(), coords);
+				return(subseq);
+			}    	
+      ++ids;
+    }
+  }
+	throw std::runtime_error("Could not find sequence matching with digest " + digest);
+}
+
+std::vector<std::string> ReferencesDatabase::getSequenceIdentifiersForDigest(std::string const & digest) const 
+{
+	unsigned int total_hits = pim->digestToIds.count(digest);
+	std::vector<std::string> referenceIdsToReturn;
+	try {
+		std::multimap<std::string, std::string>::const_iterator ids = pim->digestToIds.find(digest);
+		for (unsigned int i = 0; i < total_hits; i++)
+	  {
+			referenceIdsToReturn.push_back(ids->second);
+	    ++ids;
+	  }
+  } catch(...){
+  	throw std::runtime_error("Could not find sequence matching with digest " + digest);
+  }	
+	return(referenceIdsToReturn);
+}
+
+std::string ReferencesDatabase::getDigestFromSequenceAccession(std::vector<std::string> const & refseq_id) const {
+	// idToDigest
+	for(auto rs: refseq_id){
+		// std::cout << "rs from getDigest => " << rs << std::endl;
+		std::map<std::string, std::string>::iterator it = (pim->idToDigest).find(rs) ;
+		if( it == pim->idToDigest.end() ) {
+			std::cerr << "If scenario!" << std::endl;
+		} else {
+			// std::cerr << "Else scenario, should return now!" << std::endl;
+			return(it->second);
+		}
+	}
+	throw std::runtime_error("Unable to find digest for provided reference sequence : " + refseq_id.front()); 
 }
 
 //std::vector<ReferenceMetadata> const & ReferencesDatabase::getReferencesMetadata() const
