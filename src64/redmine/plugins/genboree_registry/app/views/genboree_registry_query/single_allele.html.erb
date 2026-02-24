@@ -1,0 +1,343 @@
+<% @hash_response = JSON.parse(@response_from_registry) %>
+<% if @hash_response.keys.include?("errorType") %>
+  <!-- div class="container" -->
+   <div class="row">
+     <div class="col-sm-12 danger">
+	<h4> We were not able to parse, find, or, register allele using  <%= params["hgvs"] %> HGVS expression or CA Identifier. </h4>
+	<p> The following information might be helpful to understand the reason.  </p>
+
+	<% if @hash_response.keys.include?("errorType")  %> 
+	   <p> <b>Type of the error:</b> <%= @hash_response["errorType"] %> </p>
+	<% end %>
+
+	<% if @hash_response.keys.include?("message")  %> 
+	   <p> <b>Explanation:</b> <%= @hash_response["message"] %> </p>
+	<% end %>
+
+	<% if @hash_response.keys.include?("actualAllele") %> 
+	       <p><b> Reference sequence: </b> <%= @hash_response["sequenceName"] %> </p>
+	       <p><b> Actual allele:  </b> <%= @hash_response["actualAllele"] %>  </p>
+	       <p><b> Provided in the HGVS expression:  </b> <%= @hash_response["givenAllele"] %> </p>
+	       <p><b> Region:  </b> <%= @hash_response["region"] %></p>
+	<% end %>
+     </div>
+   </div>
+  </div>
+<% end %>
+
+<% if ! @hash_response.keys.include?("errorType") %>
+    <%# logger.error("REGISTRY - Rendering single allele view") %>
+    <%# logger.error("REGISTRY - The current user is #{User.current}") %>
+  <!-- div class="container" -->
+     <%
+        @regRequired = (!is_registered? @hash_response)
+        if(@regRequired)
+          regLinkHref = "/redmine/projects/registry/genboree_registry/create?hgvs=#{params["hgvs"].gsub("+","%2B").gsub(">","%3E").strip}"
+          @regLink = "<a href=\"#{regLinkHref}\" style=\"...\">"
+        end
+        @showGeneInfo = true
+        caid = uri_to_caid @hash_response["@id"]
+        gene_information = parse_gene_links (get_gene @hash_response)
+        gene2preferredRefseq = find_preferred_transcripts gene_information
+     %>
+     <%= render :partial => "genboree_registry_query/register_new_allele" %>
+     <% logger.error("REGISTRY - After gene") %>
+     <% if has_external_records? @hash_response %>
+     <div class="row external-identifiers">
+      <div class="col-sm-12">
+        <h4 style="font-style: italic;text-decoration: underline;">Identifiers and link-outs to other resources</h4>
+      </div>
+      <% (get_clinvar_variations @hash_response).each do |var|  %>
+	       <div class="col-sm-4">
+		  <span class="extlink-resource prop">ClinVar Variation Id: </span>
+		  <a href=<%=var["link"]%> target="_blank">
+		       <span class="extlink-resource extlink-value">
+			 <%=var["vid"]%>
+		       </span>
+		  </a>
+	       </div>
+	       <div class="col-sm-4">
+		  <span class="extlink-resource prop">ClinVar RCV Id: </span>
+		  <% var["rcv"].split(",").each do |rcv| %>
+		     <a href="https://www.ncbi.nlm.nih.gov/clinvar/<%=rcv%>" target="_blank">
+		       <span class="extlink-resource extlink-value">
+			 <%=rcv%>
+		       </span>
+		     </a>
+		    </span>
+		  <% end %>
+	       </div>
+      <% end %>
+
+      <% dbsnp_ids = get_dbsnp @hash_response %>
+      <% if dbsnp_ids.size > 0 %>
+	 <div class="col-sm-4">
+	 <span class="extlink-resource prop">dbSNP Id: </span>
+	   <% (dbsnp_ids).each do |var|  %>
+		<a href=<%=var["link"]%> target="_blank">
+		   <span class="extlink-resource extlink-value">rs<%=var["rsid"]%></span>
+		</a>
+	   <% end %>
+	 </div>
+      <% end %>
+
+      <% exac_ids = get_exac @hash_response %>
+      <% if exac_ids.size > 0 %>
+	 <div class="col-sm-4">
+	 <span class="extlink-resource prop">ExAC: </span>
+	   <% (exac_ids).each do |var|  %>
+		<a href=<%=var["link"]%> target="_blank">
+		   <span class="extlink-resource extlink-value"><%=var["id"]%></span>
+		</a>
+	   <% end %>
+	 </div>
+      <% end %>
+
+      <% gnomad_ids = get_gnomad @hash_response %>
+      <% if gnomad_ids.size > 0 %>
+	 <div class="col-sm-4">
+	 <span class="extlink-resource prop">gnomAD: </span>
+	   <% (gnomad_ids).each do |var|  %>
+		<a href=<%=var["link"]%> target="_blank">
+		   <span class="extlink-resource extlink-value"><%=var["id"]%></span>
+		</a>
+	   <% end %>
+	 </div>
+      <% end %>
+
+      <% cosmic_ids = get_cosmic_variations @hash_response %>
+      <% if cosmic_ids.size > 0 %>
+	 <div class="col-sm-4">
+	 <span class="extlink-resource prop">COSMIC: </span>
+	   <% (cosmic_ids).each do |var|  %>
+		<a href=<%=var["link"]%> target="_blank">
+		   <span class="extlink-resource extlink-value"><%=var["vid"]%></span>
+		</a>
+	   <% end %>
+	 </div>
+      <% end %>
+
+      <% ai_ids = get_allelic_epigenome @hash_response %>
+      <% if ai_ids.size > 0 %>
+	 <div class="col-sm-4">
+	 <span class="extlink-resource prop">Roadmap epigenomics: </span>
+	   <% ai_ids.each do |var|  %>
+		<a href=<%=var["link"]%> target="_blank">
+		   <span class="extlink-resource extlink-value"><%=var["id"]%></span>
+		</a>
+	   <% end %>
+	 </div>
+      <% end %>
+
+      <% myvariant_ids = get_myvariant @hash_response %>
+      <% if myvariant_ids.size > 0 %>
+	 <div class="col-sm-4">
+	 <span class="extlink-resource prop">MyVariant Identifiers: </span>
+	   <% (myvariant_ids).each do |var|  %>
+		<a href=<%="#{var["link"]}&format=html" %> target="_blank">
+		   <span class="extlink-resource extlink-value"><%=var["id"]%></span>
+		</a>
+	   <% end %>
+	 </div>
+      <% end %>
+
+     </div> <!-- End row --> 
+
+   <% end %>
+   <!-- User contributed links go here--> 
+   <% if(has_user_contributed_sources @hash_response)%>
+     <div class="row external-identifiers">
+      <div class="col-sm-12">
+        <h4 style="font-style: italic;text-decoration: underline;">
+           User contributed link-outs
+        </h4>
+      </div>
+        <% @hash_response["externalSources"].each do |key,values| %>
+	   <div class="col-sm-4">
+	   <span class="extlink-resource prop"><%= "#{l(key).include?("translation missing") ? key : l(key)}: " %></span>
+           <% values.each do |each_value| %>
+	         <a href=<%= each_value["guiUrl"] ||= each_value["@id"] %> target="_blank">
+	              <span class="extlink-resource extlink-value">
+			 <%= each_value["guiLabel"] %>
+	              </span>
+	         </a>
+            <% end %>
+	    </div>
+         <% end %>
+     </div>
+   <% else %>
+      <%#= JSON.pretty_generate @hash_response %>
+   <% end %>
+
+   <%# logger.error("REGISTRY - After external resource") %>
+
+   <%
+      @calcLink = "<a href=\"#{@project_settings.calculatorPath}#{caid}\" target=\"_blank\">
+  <span class=\"extlink-resource\">Calculator<span class=\"fa fa-calculator\"></span></span>
+  </a>"
+   %>
+   <%= render :partial => "genboree_registry_query/systematic_links", :locals => { :caid => caid } %>
+
+   <% logger.error("REGISTRY - After calculator and JSON LD") %>
+   <div class="row">
+	    <div class="col-sm-12">
+
+      <% if has_genomic_alleles? @hash_response %>
+       <h4 class="vector-h5">Genomic Alleles</h4>
+         <%  genomic_hgvs = get_genomic_hgvs @hash_response %>
+          <table class="table sortable">
+      <thead>
+       <tr>
+        <th>HGVS</th>
+        <th>Genome Assembly</th>
+       </tr>
+      </thead>
+      <tbody>
+		    <% genomic_hgvs.each do |i| %>
+		      <tr>
+		       <td class="break-words">
+			 <%= "#{i["expressions"].join(" , ")}"%>
+		       </td>
+		       <td>
+			 <% if i["assembly"] != "" %>
+			   <span class="badge assembly-badge"><%= i["assembly"] %></span>
+			 <% end %>
+		       </td>
+		      </tr>
+		    <% end %>
+		</tbody>
+	      </table>
+	  <% end %>
+
+	  <% if has_transcript_alleles? @hash_response %>
+	     <h4 class="vector-h5">Transcript Alleles</h4>
+	      <%  transcript_hgvs = get_transcript_hgvs @hash_response %>
+              <%  number_of_unique_genes = (get_unique_gene_symbols @hash_response).size %>
+	       <table class="table">
+		<thead>
+		 <tr>
+		  <th>HGVS</th>
+		  <th>Amino-acid change</th>
+		 </tr>
+		</thead>
+		<tbody>
+		    <% transcript_hgvs.each do |tallele| %>
+		      <tr>
+		       <td class="break-words">
+			 <%= "#{tallele["expressions"].join(" , ")}"%>
+                         <%# When more than one gene then show the gene symbol next to transcript HGVS%>
+			 <% if(number_of_unique_genes > 1) %>
+			    <span><%=
+                                if(tallele["gene_symbol"] != "")
+                                 "(#{tallele["gene_symbol"]})" 
+                                end
+                            %></span>
+                         <% end %>
+                         <% if(tallele["expressions"].length==1) %>
+                           <% if tallele["expressions"][0].include?("NM_")  %>
+                            <span class="btn btn-primary btn-xs" style="margin-right: 5px">
+                              <a href="https://variantvalidator.org/variantvalidation/?variant=<%="#{tallele["expressions"][0].gsub("+","%2B")}"%>&primary_assembly=GRCh38&alignment=splign" target="_blank">
+                                VV
+                              </a>
+                            </span>
+                           <% end %>
+                           <% if((number_of_unique_genes == 1) and (! gene2preferredRefseq[tallele["gene_symbol"]].nil?)) %>
+							   <% if tallele["expressions"][0].include?(gene2preferredRefseq[tallele["gene_symbol"]]) %>
+							       <span class="btn btn-warning btn-xs" style="margin-right: 5px">
+							       	 MANE Preferred
+							       </span>
+							   <% end %>  
+							<% end %>                        
+                         <% end %>
+		       </td>
+		       <td class="break-words">
+			 <% if tallele["aa_variation"] != "" %>
+			   <span class="badge aa-badge">
+                             <%= (tallele["aa_variation"].length > 40) ? "#{tallele["aa_variation"][0..40]}..." : tallele["aa_variation"] %>
+			     <% if tallele["aa_well_defined"] != "" %>
+				  <a href=<%="allele?hgvs=#{tallele["aa_well_defined"]}"%>><span class="fa fa-external-link"></span></a>
+                             <% end %>
+                           </span>
+			 <% else %>
+			   <span class="fa fa-minus"></span>
+			 <% end %>
+		       <td>
+		    <% end %>
+		</tbody>
+	       </table>
+	     <% end %>
+
+	     <% if has_aminoacid_alleles? @hash_response %>
+		  <br>
+		  <h4 class="vector-h5">Amino-acid Alleles</h4>
+		  <p>
+		    <%  aminoacid_hgvs = get_aminoacid_hgvs @hash_response %>
+                    <%  number_of_unique_genes = (get_unique_gene_symbols @hash_response).size %>
+		  </p>
+	          <table class="table">
+	           <thead>
+	            <tr>
+	             <th>HGVS (amino-acid)</th>
+	             <th>Transcript change</th>
+	            </tr>
+	           </thead>
+		   <tbody>
+                       <% aminoacid_hgvs.each do |aallele| %>
+                         <tr>
+                          <td class="break-words">
+                            <%= "#{aallele["expressions"].join(" , ")}"%>
+                          </td>
+                          <td class="break-words">
+                            <% if ! aallele["transcript_variation"].empty? %>
+                               <%# There will be several transcript variation per protein allele%>
+                               <% aallele["transcript_variation"].each do |tvar| %>
+			         <div class="badge aa-badge">
+                                   <%= (tvar.length > 40) ? "#{tvar[0..40]}..." : tvar %>
+			           <% if tvar != "" %>
+			                <a href=<%="allele?hgvs=#{tvar}"%>><span class="fa fa-external-link"></span></a>
+                                   <% end %>
+                                 </div>
+                                 <br>
+                               <% end %>
+			    <% else %>
+			      <span class="fa fa-minus"></span>
+			    <% end %>
+                          </td>
+                        <% end %>
+		   </tbody>
+                  </table>
+	     <% end %>
+	 </div>
+	</div>
+
+        <% logger.error("REGISTRY - After amino-acid HGVS") %>
+
+	<% if has_genomic_alleles? @hash_response %>
+	  <div class="row systematic-links">
+             <% grch38_info = get_grch38_reference_sequence_start_end @hash_response %>
+	      <div class="col-sm-6">
+		<a href=<%="alleles?refseq=#{grch38_info["g38_refseq"]}&begin=#{grch38_info["g38_start"] - 100 }&end=#{grch38_info["g38_start"]}&skip=0&limit=50" %>>
+		  <span class="extlink-resource">
+                    <span class="extlink-resource fa fa-arrow-circle-o-left">
+                    </span>
+		    Search 100 bp 5'
+                  </span>
+                </a>
+	      </div>
+	      <div class="col-sm-6">
+		<a href=<%="alleles?refseq=#{grch38_info["g38_refseq"]}&begin=#{grch38_info["g38_start"]}&end=#{grch38_info["g38_start"] + 100}&skip=0&limit=50" %>>
+		  <span class="extlink-resource pull-right">Search 100 bp 3'
+                  <span class="extlink-resource fa fa-arrow-circle-o-right"></span></span></a> 
+	      </div>
+	  </div>
+	<% end %>
+
+    <% logger.error("REGISTRY - After terminal links") %>
+
+  </div>
+<% end %>
+
+<style>
+
+</style>
+

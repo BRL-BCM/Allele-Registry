@@ -25,9 +25,11 @@ namespace flatDb {
 	protected:
 		// ----- tools to set procedure as completed
 		std::mutex fAccessToCompleted;
+		std::mutex fAccessToEndOfQuery;
+		std::mutex fAccessCounter;
 		std::condition_variable fWaitingForCompleted;
 		bool fCompleted = false;
-		std::atomic<unsigned> fCounter;
+		unsigned fCounter;
 		void announceAsCompleted(); // called from derived class
 	private:
 		// ----- api for subprocedure's destructor

@@ -11,7 +11,11 @@
 #include "../mysql/mysqlConnection.hpp"
 #include "../debug.hpp"
 
-std::string const alleleRegistryVersion = "__ALLELE_REGISTRY_VERSION__";
+//#include <algorithm>
+
+std::string const alleleRegistryVersion = "kpr-9-6-18";
+
+std::string const maneVersion = "1.0";
 
 // ============================== configuration
 struct Configuration {

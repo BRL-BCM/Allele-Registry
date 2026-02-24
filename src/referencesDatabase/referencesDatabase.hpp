@@ -51,12 +51,14 @@ struct Gene {
 struct Mane {
 	// std::string ncbiGeneId;
 	// std::string ensemblGene;
-	unsigned hgncId;
+	unsigned hgncId = 0;
 	std::string hgncSymbol;
 	// std::string geneName;
-	std::string refSeqAccession;
-	std::string ensemblAccession;
-	// std::string maneStatus;
+	std::string refSeqNucleotideAccession;
+	std::string refSeqProteinAccession;
+	std::string ensemblNucleotideAccession;
+	std::string ensemblProteinAccession;
+	std::string maneStatus;
 	// std::string gRCh38Chromosome;
 	// unsigned chromsomeStart;
 	// unsigned chromosomeEnd;
@@ -87,6 +89,8 @@ public:
 	ReferencesDatabase(std::string const & path);
 	// destructor
 	~ReferencesDatabase();
+	unsigned getNumMetadata() const;
+	std::string getManeVersion() const;
 	// Get sequence of any refSeq, for spliced refSeq introns are included (parameters are always unspliced coordinates)
 	std::string getSequence(ReferenceId refId, RegionCoordinates region) const;
 	std::string getSplicedSequence(ReferenceId refId, RegionCoordinates region) const;
@@ -115,6 +119,9 @@ public:
 	// For Mane trasncripts 
 	std::string getPreferredTranscriptFromHGNCSymbol(std::string const & symbol) const;
 	std::string getPreferredTranscriptFromHGNCId(unsigned hgncId) const;
+	std::multimap<std::string, Mane> getAllTranscriptsFromHGNCId(unsigned hgncId) const;
+	std::map<std::string, std::pair<std::string, Mane> >::const_iterator getAllTranscriptsByName(std::string const & name) const;
+	bool getAllTranscriptsByNameExists(std::string const & name) const;
 
 	// Returns CDS associated with given refId (it must be transcript)
 	RegionCoordinates getCDS(ReferenceId refId) const;

@@ -171,12 +171,16 @@ void handler(Connection* connection, Request&& request)
 			std::string contentType = "";
 			std::function<std::string()> callbackNextBodyChunk;
 			std::string redirected = "";
-			dispatcher->processRequest( request.fullUri, request.method, request.uri, request.query_params, nullptr, httpStatus, contentType, callbackNextBodyChunk, redirected );
-			if (redirected == "") {
-				if (contentType != "") connection->response().addHeader("Content-Type", contentType);
-				connection->response().setCode(httpStatus).setBody( std::move(callbackNextBodyChunk) );
+			if (request.method != HTTPP::HTTP::Method::HEAD) {
+				dispatcher->processRequest( request.fullUri, request.method, request.uri, request.query_params, nullptr, httpStatus, contentType, callbackNextBodyChunk, redirected );
+				if (redirected == "") {
+					if (contentType != "") connection->response().addHeader("Content-Type", contentType);
+					connection->response().setCode(httpStatus).setBody( std::move(callbackNextBodyChunk) );
+				} else {
+					connection->response().setCode(httpStatus).addHeader("Location", redirected);
+				}
 			} else {
-				connection->response().setCode(httpStatus).addHeader("Location", redirected);
+				connection->response().setCode(HTTPP::HTTP::HttpCode::MethodNotAllowed);
 			}
 			HTTPP::HTTP::setShouldConnectionBeClosed(request, connection->response());
 			connection->sendResponse(); // connection pointer may become invalid

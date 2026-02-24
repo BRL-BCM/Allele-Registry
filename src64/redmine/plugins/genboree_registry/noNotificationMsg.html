@@ -1,0 +1,34 @@
+<!--
+  For setting up downtime alert:
+  Move this file from noNotificationMsg.html to  notificationMsg.html
+  Update the downtime in <script></script> below
+
+  For removing the downtime alert:
+  Move notificationMsg.html to  noNotificationMsg.html
+
+  Always verify on the interface!
+-->
+<div class="alert alert-danger" role="alert">
+  The allele registry services will be unavailable on <span id="date-down"></span> from <span id="start-time"></span> to <span id="end-time"></span> <span id="tz"></span> for maintenance.
+</div>
+
+<script>
+  //Replace the  Year, Month (0 based index), Date, Time, Min, Sec in UTC
+  // This is Start Time
+  var utcDateObj = new Date( Date.UTC( 2018, 7, 13, 13, 0, 0 ) ) ;
+  var localStartTimeStr = utcDateObj.toLocaleTimeString() ;
+  var localDateStr = utcDateObj.toLocaleDateString()
+
+  // This is End Time
+  var utcDateObj = new Date( Date.UTC( 2018, 7, 13, 13, 30, 0 ) ) ;
+  var localEndTimeStr = utcDateObj.toLocaleTimeString() ;
+
+  var timeStr = utcDateObj.toString()
+  var matches = timeStr.match( /(\S+)\s+(\([^\)]+\))$/ )
+  var tzNameStr = matches[2]
+
+  $('#date-down').html(localDateStr);
+  $('#start-time').html(localStartTimeStr);
+  $('#end-time').html(localEndTimeStr);  
+  $('#tz').html(tzNameStr);  
+</script>

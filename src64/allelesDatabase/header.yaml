@@ -1,0 +1,34 @@
+# NOTE: don't touch
+keySize: 8 # 8 bytes for 64 bit keys
+
+# NOTE: don't touch this parameter
+# parameters shouldn't be hardcoded, but this parameter should be changed very carefully
+# since it will affect the index node and the data node
+# currently index node pageSize and data node pageSize are coupled into the same parameter
+pageSize: 256 # (int Kb, 1024 bytes) index node pageSize and data node pageSize
+
+# if you need to expand the index node, increase the indexNodePages parameter instead
+indexNodePages: 64 # number of index node pages
+
+# revision 0
+# firstKey: 32 bit
+# lastKey: 32 bit
+# pageId: 18 bit
+# byetsCount: 19 bit
+# recordCount: 19 bit
+
+# revision 1
+# firstKey: 64 bit
+# lastKey: 64 bit
+# pageId: 32 bit
+# byetsCount: 32 bit
+# recordCount: 32 bit
+
+# revision 2
+# firstKey: 64 bit
+# lastKey: 64 bit
+# pageId: 64 bit
+# byetsCount: 64 bit
+# recordCount: 64 bit
+
+revision: 1 # index node entry revision

@@ -1,0 +1,143 @@
+<%
+  defaultPluginSettings = Redmine::Plugin.find("genboree_registry").settings[:default]
+  # Set project and project settings
+    @project = Project.find(params[:id])
+    @project_settings = GenboreeRegistry.find_by_project_id(@project.id)
+%>
+<!DOCTYPE html>
+<html lang="<%= current_language %>">
+<head>
+  <meta charset="utf-8" />
+  <title>Allele Registry</title>
+  <!-- title><%=h html_title %></title -->
+  <meta name="description" content="<%= Redmine::Info.app_name %>" />
+  <meta name="keywords" content="issue,bug,tracker" />
+  <!-- make everything responsive -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- link rel="stylesheet" type="text/css" href="/site/css/gb.css" --!>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <%= stylesheet_link_tag "font-awesome.min.css" , :plugin => 'genboree_generic' %>
+  <!--link rel="stylesheet" type="text/css" href="/site/fonts/fontello/css/fontello.css" -->
+  <script async="" src="//www.google-analytics.com/analytics.js"></script><script src="/site/js/jquery-1.11.1.min.js"></script>
+  <script type="text/javascript" src="/site/js/prettify.js"></script>
+  <script type="text/javascript" src="https://platform.twitter.com/widgets.js" charset="utf-8"> </script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <%= stylesheet_link_tag "twitter.css" , :plugin => 'genboree_registry', :media => 'all' %>
+  <%= stylesheet_link_tag "common.css" , :plugin => 'genboree_registry', :media => 'all' %>
+  <%= javascript_include_tag 'registry_search.js', :plugin => 'genboree_registry' %>
+  <%= javascript_include_tag 'vector_pagination.js', :plugin => 'genboree_registry' %>
+  <%= javascript_include_tag 'sorttable.js', :plugin => 'genboree_registry' %>
+</head>
+<body>
+ <div class="container">
+  <div class="row header-menu todisappear">
+    <div class="col-sm-4 col-xs-12"> 
+     <img src="//actionability.clinicalgenome.org/redmine/attachments/download/242/clingen_logo_180x138.png" alt="Clinical Genome Resource" class="logo img-responsive">
+    </div>
+    <div class="col-sm-8 hide-me-on-xs"> 
+      <div class="row">
+       <div class="col-sm-12"> 
+        <div id="reg-title" class="right-nav pull-right">
+	  <a id="nav-link" href="/redmine/projects/<%=params[:id]%>/genboree_registry/landing">
+             ClinGen Allele Registry
+          </a>
+        </div>
+       </div>
+      </div>
+    </div>  <!-- end column-8 -->
+   </div> <!-- end row -->
+   <%= render "layouts/status" %>
+   <%#= unless request.original_url.include?("reg.genome.network") or request.include?("reg.clinicalgenome.org")  %>
+   <% if !@project_settings.isProduction %>
+      <div class="row alert alert-danger" style="margin-bottom:0px"> 
+        <div class="col-sm-12"> 
+	     This is a test version of the ClinGen Allele Registry and hosts obsolete or unreal identifiers. Please visit <a href="//reg.genome.network" class="alert-link">here</a> for the production version.
+        </div>
+      </div>
+    <% end %>
+
+  <%# Build path to special-plugin file, living under Rails application dir (i.e. under redmine root somewhere) %>
+  <% tmpHtmlMsgFile = Rails.root.join( 'plugins', 'genboree_registry', 'notificationMsg.html' ) %>
+  <%# IFF file exists, read in its HTML dynamically and insert into current page's html %>
+  <% if(File.exist?( Rails.root.join( 'plugins', 'genboree_registry', 'notificationMsg.html' ) ) ) %>
+     <%= File.read( tmpHtmlMsgFile ).html_safe %>
+  <% end %>
+
+   <%# end %>
+   <%= yield %>
+ </div> 
+ <footer>
+  <div class="container">
+    <div class="row">
+       <div class="col-lg-9 col-md-8 col-sm-7 powered text-right">
+       </div>
+       <div class="col-lg-3 col-md-4 col-sm-5 col-xs-12 powered text-right">
+         <a href="//www.genboree.org" class="xnavbar-brand" target="_blank">
+           <i class="fa fa-plug"></i>
+           Powered By Genboree
+         </a>
+       </div>
+    </div>
+ </footer>
+</body>
+
+<style>
+html {
+  margin: 0px;
+}
+.header-menu {
+  height: 136px;
+  background: #3a9ee0;
+}
+
+.logo {
+  max-width: 225px;
+  height: auto;
+  vertical-align: middle;
+  margin-left: 120px;
+  float: left;
+}
+
+.right-nav {
+  color: #ffffff;
+  font-family: 'Roboto Condensed', "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 700;
+  font-size: 25px;
+  padding: 2em;
+}
+
+/*
+@media (min-width: @screen-sm-min) { 
+    #reg-title {
+          display: none;
+    }
+}
+@media (min-width: @screen-md-min) { 
+    #reg-title {
+          display: none;
+    }
+}*/
+
+@media (max-width:768px) {
+  .hide-me-on-xs  {
+         display: none;
+  }
+}
+
+
+.gray-font {
+    color: #666666;
+}
+#nav-link {
+ color: #fff
+}
+::selection {
+ background-color: orange;
+ color: #555555;
+}
+::-moz-selection {
+ background-color: orange;
+ color: #555555;
+}
+
+</style>

@@ -1,0 +1,39 @@
+<%= javascript_include_tag 'helpers.js', :plugin => 'genboree_generic' %>
+<div class="row">
+ <div class="col-sm-12 text-right user-info">
+   <div>
+     <span class="btn btn-xs btn-primary custom-signin-btn"><a class="inside-btn-link" href=<%= "#{RedmineApp::Application.routes.default_scope[:path]}/projects/registry/genboree_registry/landing" %>>Allele Registry</a></span>
+     <span class="btn btn-xs btn-primary custom-signin-btn"><a class="inside-btn-link" href=<%= "//calculator.clinicalgenome.org/site/cg-calculator" %> target="_blank">Pathogenicity Calculator</a></span>
+     <% if @currRmUser.login == "" %>
+     <%# if User.current.login == "" %>
+        <span class="btn btn-xs btn-primary custom-signin-btn"><a class="inside-btn-link" href='/redmine/projects/clingen_users/register_clingen_user/cg_users/show'>Login</a></span>
+	<span class="btn btn-xs btn-primary custom-signin-btn"><a class="inside-btn-link" href=<%= "#{RedmineApp::Application.routes.default_scope[:path]}/projects/#{params[:id]}/genboree_registry/landing#manageLogin" %>>Forgot Password?</a></span>
+     <% else %>
+        <span class="btn btn-xs btn-primary custom-signin-btn"><a class="inside-btn-link" href='/redmine/projects/clingen_users/register_clingen_user/cg_users/show'>Profile</a></span>
+        <span class="btn btn-xs btn-primary custom-signin-btn">
+          <a class="inside-btn-link" onclick="logout();">
+            Logout
+          </a>
+        </span>
+     <% end %>
+   </div>
+ </div>
+</div>
+
+<style>
+.inside-btn-link {
+ color: white;
+}
+.inside-btn-link:hover {
+ color: white;
+ font-style: bold;
+}
+.user-info {
+ margin-top: -4px;
+}
+.custom-signin-btn , .custom-signin-btn:hover, .custom-signin-btn:focus {
+ background-color: #3a9ee0;
+ border: 1px solid #3a9ee0;
+ border-radius : 0px;
+}
+</style>

@@ -1,0 +1,119 @@
+<div class="row">
+  <div class="col-sm-12">
+   <% @local_hash = JSON.parse(input_response) %>
+   <%#= @local_hash %>
+   <% split_content = input_hgvs.split("\n") %>
+   <% total_entries = split_content.length %>
+   <% total_in_response = @local_hash.length %>
+   <% if total_entries == total_in_response %>
+      <table class="table">
+	 <!-- thead -->
+	    <tr>
+	       <th>
+		 Supplied HGVS
+	       </th>
+	       <th style="width:5px">
+		 Identifier
+	       </th>
+	       <th>
+		 Chr
+	       </th>
+	       <th>
+		 Genomic (hg38)
+	       </th>
+	       <th>
+		 Gene
+	       </th>
+	       <th>
+		 Transcript (Amino-acid)
+	       </th>
+	       <th>
+		 Linkouts
+	       </th>
+	       <th>
+		 Get Identifier
+	       </th>
+	    </tr>
+	 <!-- /thead -->
+	 <tbody>
+	  <% (0...total_in_response).each do |counter|  %>
+	    <tr>
+	      <%# First column: HGVS %>
+	      <td style="word-wrap:break-word; font-size:0.9em">
+		<%= split_content[counter] %>
+	      </td>
+
+	       <% if @local_hash[counter].keys.include?("@id")  %>
+		  <% caid = uri_to_caid @local_hash[counter]["@id"] %>
+		  <% if @local_hash[counter]["@id"].match(/CA[0-9]+/) %>
+		    <%# Second column: CAid %>
+		    <td>
+		      <a href=<%= "/redmine/projects/registry/genboree_registry/by_caid?caid=#{@local_hash[counter]["@id"].match(/CA[0-9]+/)}"%> >
+			<%= @local_hash[counter]["@id"].match(/CA[0-9]+/) %>
+		      </a>
+		    </td>
+		    <%# Third column: chromosome %>
+		      <%= render :partial => "genboree_registry_query/add_chr_table" , :locals => { :hit => @local_hash[counter] , :caid => caid }%>
+		    <%# Fourth column: genomic %>
+		      <%= render :partial => "genboree_registry_query/add_genomic_gdot" , :locals => { :hit => @local_hash[counter] , :caid => caid }%>
+
+		      <%= render :partial => "genboree_registry_query/add_gene" , :locals => { :hit => @local_hash[counter] , :caid => caid }%>
+		    <%# Fifth column: transcript %>
+		      <%#= render :partial => "genboree_registry_query/add_transcript_cdot" , :locals => { :hit => @local_hash[counter] , :caid => caid }%>
+		    <%# Sixth column: Amino-acid %>
+		      <%= render :partial => "genboree_registry_query/add_cdot_pdot" , :locals => { :hit => @local_hash[counter], :caid => caid }%>
+		    <%# Seventh column: Nothing %>
+		      <%= render :partial => "genboree_registry_query/add_external_link" , :locals => { :hit => @local_hash[counter], :caid => caid }%>
+		    <td>
+		    </td>
+		  <% else %>
+		    <td>
+		     <p class="text-success">A valid allele but not present in the registry</p>
+		    </td>
+		    <% caid = "" %>
+		    <%# Third column %>
+		      <%= render :partial => "genboree_registry_query/add_chr_table" , :locals => { :hit => @local_hash[counter] }%>
+		    <%# Fourth column %>
+		      <%= render :partial => "genboree_registry_query/add_genomic_gdot" , :locals => { :hit => @local_hash[counter] }%>
+		    <%# Fifth column %>
+		      <%= render :partial => "genboree_registry_query/add_transcript_cdot" , :locals => { :hit => @local_hash[counter] }%>
+		    <%# Sixth column %>
+		      <%= render :partial => "genboree_registry_query/add_aminoacid_pdot" , :locals => { :hit => @local_hash[counter] }%>
+		    <%# Seventh column %>
+		    <td>
+			-
+		    </td>
+		    <td>
+		     <a target="_blank" href="/redmine/projects/registry/genboree_registry/create?hgvs=<%=split_content[counter]%>"><button type="link" class="btn btn-xs btn-default">Register</button></a>
+		    </td>
+		  <% end %>
+	       <% else %>
+		 <td colspan="8" class="text-danger">
+		    Not a valid allele. <%= "#{@local_hash[counter]["message"]}" rescue "#{@local_hash[counter]["description"]}" rescue "#{@local_hash[counter]["errorType"]}" %>
+		 </td>
+		 <!--td>
+		   -
+		 </td>
+		 <td>
+		   -
+		 </td>
+		 <td>
+		   -
+		 </td>
+		 <td>
+		   -
+		 </td>
+		 <td>
+		   -
+		 </td>
+		 <td>
+		   -
+		 </td-->
+	       <% end %>
+	    </tr>
+	  <% end %>
+	  </tbody>
+	 </table>
+    <% end %>
+</div>
+</div>

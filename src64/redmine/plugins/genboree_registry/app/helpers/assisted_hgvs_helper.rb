@@ -1,0 +1,3 @@
+module AssistedHgvsHelper
+
+end

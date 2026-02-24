@@ -30,7 +30,9 @@ namespace flatDb {
 		// these methods do not check if given pages are allocated or free
 		void     writePages(unsigned pageId, unsigned pagesCount, void const *);
 		void     readPages (unsigned pageId, unsigned pagesCount, void *);
-		void flush();
+		void     writeIndexPages(unsigned pageId, unsigned pagesCount, void const *);
+		void     readIndexPages (unsigned pageId, unsigned pagesCount, void *);
+		void     flush();
 	};
 
 }

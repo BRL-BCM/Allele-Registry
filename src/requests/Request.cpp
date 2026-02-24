@@ -19,6 +19,15 @@ Configuration Request::configuration;
 std::mutex Request::requestLog_access;
 std::ofstream Request::requestLog;
 
+bool Request::allFinished() const {
+	bool isFinished = true;
+	for(int i=0;i<this->chunksToSend_finished.size();i++) {
+		if(this->chunksToSend_finished[i] == false) {
+			isFinished = false;
+		}
+	}
+	return isFinished;
+}
 
 void Request::initGlobalVariables(Configuration const & conf)
 {
@@ -40,7 +49,7 @@ void Request::initGlobalVariables(Configuration const & conf)
 
 errorType Request::lastErrorType()
 {
-	std::lock_guard<std::mutex> synchScope(this->chunksToSend_access);
+	std::lock_guard<std::mutex> synchScope(this->chunksToSend._mutex);
 	return error;
 }
 
@@ -67,30 +76,58 @@ void Request::addChunkOfResponse(std::vector<Document> const & documents)
 				++docCount;
 			}
 			if (chunk == "") break; // no more data
-		} else {
-			// wait
-			std::this_thread::yield();
-			std::this_thread::sleep_for( std::chrono::milliseconds(10) );
-			std::this_thread::yield();
 		}
 		{ // try to add the chunk to queue with stuff to send
-			std::lock_guard<std::mutex> synchScope(this->chunksToSend_access);
-			if (this->chunksToSend_finished) return; // there is nothing more to do
-			if (! chunksToSend_started) {
-				chunksToSend_started = true;
-				if (isJson) chunk[0] = '[';
-			}
-			if (this->chunksToSend.size() < 8) { // TODO - set maximum number of chunks
-				this->documentsCount += docCount;
-				this->bytesCount += chunk.size();
-				this->chunksToSend.push_back(std::move(chunk));
-				chunk = "";
-				if (requestTerminated) {
-					if (isJson) this->chunksToSend.back().append("]");
-					this->chunksToSend_finished = true;
-					throw ExceptionRequestTerminated();
+			this->chunksToSend._mutex.lock();
+			bool isFinished = this->allFinished();
+			this->chunksToSend._mutex.unlock();
+			if(isFinished) return; // there is nothing more to do
+
+			this->chunksToSend._mutex.lock();
+			bool allNotStarted = true;
+			for(int i=0;i<this->chunksToSend_started.size();i++) {
+				if(this->chunksToSend_started[i] == true) {
+					allNotStarted = false;
 				}
 			}
+			if (allNotStarted) {
+				for(int i=0;i<this->chunksToSend_started.size();i++) {
+					this->chunksToSend_started[i] = true;
+				}
+				if (isJson) chunk[0] = '[';
+			}
+			this->chunksToSend._mutex.unlock();
+		 
+			this->chunksToSend._mutex.lock();
+			this->documentsCount += docCount;
+			this->bytesCount += chunk.size();
+			this->chunksToSend._mutex.unlock();
+
+			this->chunksToSend.push_back(std::move(chunk), [this](){return this->allFinished();} );
+
+			chunk = "";
+			if (requestTerminated) {
+				if (isJson) {
+					this->chunksToSend._mutex.lock();
+					bool isEmpty = this->chunksToSend.empty();
+					this->chunksToSend._mutex.unlock();
+					if (isEmpty) {
+						chunksToSend.push_back("]", [this](){return this->allFinished();} );
+					} else {
+						this->chunksToSend._mutex.lock();
+						chunksToSend.back().push_back(']');
+						this->chunksToSend._mutex.unlock();
+					}
+				}
+				this->chunksToSend._mutex.lock();
+				for(int i=0;i<this->chunksToSend_finished.size();i++) {
+					this->chunksToSend_finished[i] = true;
+				}
+				this->chunksToSend.purge();
+				this->chunksToSend._mutex.unlock();
+				throw ExceptionRequestTerminated();
+			}
+			
 		}
 	}
 }
@@ -99,8 +136,11 @@ void Request::addChunkOfResponse(std::vector<Document> const & documents)
 void Request::addChunkOfResponse(std::string && chunk)
 {
 	if (chunk == "") {
-		std::lock_guard<std::mutex> synchScope(this->chunksToSend_access);
-		this->chunksToSend_started = this->chunksToSend_finished = true;
+		this->chunksToSend._mutex.lock();
+		for(int i=0;i<this->chunksToSend_started.size();i++) {
+			this->chunksToSend_started[i] = this->chunksToSend_finished[i] = true;
+		}
+		this->chunksToSend._mutex.unlock();
 		return;
 	}
 	bool requestTerminated = false;
@@ -111,26 +151,32 @@ void Request::addChunkOfResponse(std::string && chunk)
 		}
 		if (chunk == "") return;
 		{ // try to add the chunk to queue with stuff to send
-			std::lock_guard<std::mutex> synchScope(this->chunksToSend_access);
-			if (this->chunksToSend_finished) return; // there is nothing more to do
-			if (! chunksToSend_started) {
-				chunksToSend_started = true;
-			}
-			if (this->chunksToSend.size() < 8) { // TODO - set maximum number of chunks
-				this->bytesCount += chunk.size();
-				this->chunksToSend.push_back(std::move(chunk));
-				chunk = "";
-				if (requestTerminated) {
-					this->chunksToSend_finished = true;
-					throw ExceptionRequestTerminated();
+			this->chunksToSend._mutex.lock();
+			bool isFinished = this->allFinished();
+			this->chunksToSend._mutex.unlock();
+			if(isFinished) return; // there is nothing more to do
+
+			this->chunksToSend._mutex.lock();
+			for(int i=0;i<this->chunksToSend_started.size();i++) {
+				if (! this->chunksToSend_started[i]) {
+					this->chunksToSend_started[i] = true;
 				}
-				return;
 			}
+			this->bytesCount += chunk.size();
+			this->chunksToSend._mutex.unlock();
+			this->chunksToSend.push_back(std::move(chunk), [this](){return this->allFinished();} );
+			chunk = "";
+			if (requestTerminated) {
+				this->chunksToSend._mutex.lock();
+				for(int i=0;i<this->chunksToSend_finished.size();i++) {
+					this->chunksToSend_finished[i] = true;
+				}
+				this->chunksToSend.purge();
+				this->chunksToSend._mutex.unlock();
+				throw ExceptionRequestTerminated();
+			}
+			return;
 		}
-		// wait
-		std::this_thread::yield();
-		std::this_thread::sleep_for( std::chrono::milliseconds(10) );
-		std::this_thread::yield();
 	}
 }
 
@@ -139,13 +185,26 @@ void Request::setResponse(Document const & doc)
 {
 	std::string chunk = outputBuilder.createOutput(doc);
 	{
-		std::lock_guard<std::mutex> synchScope(this->chunksToSend_access);
-		if (chunksToSend_started) throw std::logic_error("Response was already prepared.");
-		chunksToSend_started = chunksToSend_finished = true;
+		this->chunksToSend._mutex.lock();
+		bool isStarted = false;
+		for(int i=0;i<this->chunksToSend_started.size();i++) {
+			if(this->chunksToSend_started[i] == true) {
+				isStarted = true;
+			}
+		}
+		this->chunksToSend._mutex.unlock();
+		if(isStarted) throw std::logic_error("Response was already prepared.");
+		this->chunksToSend._mutex.lock();
+		for(int i=0;i<chunksToSend_started.size();i++) {
+			chunksToSend_started[i] = chunksToSend_finished[i] = true;
+		}
 		this->bytesCount += chunk.size();
 		++(this->documentsCount);
-		this->chunksToSend.push_back(std::move(chunk));
+		this->chunksToSend._mutex.unlock();
+		this->chunksToSend.push_back(std::move(chunk), [this](){return this->allFinished();} );
+		this->chunksToSend._mutex.lock();
 		if (doc.isError()) error = doc.error().type;
+		this->chunksToSend._mutex.unlock();
 	}
 }
 
@@ -153,34 +212,65 @@ void Request::setResponse(Document const & doc)
 void Request::setResponse(std::string const & text)
 {
 	{
-		std::lock_guard<std::mutex> synchScope(this->chunksToSend_access);
-		if (chunksToSend_started) throw std::logic_error("Response was already prepared.");
-		chunksToSend_started = chunksToSend_finished = true;
-		this->chunksToSend.push_back(text);
+		this->chunksToSend._mutex.lock();
+		bool isStarted = false;
+		for(int i=0;i<this->chunksToSend_started.size();i++) {
+			if(this->chunksToSend_started[i] == true) {
+				isStarted = true;
+			}
+		}
+		this->chunksToSend._mutex.unlock();
+		if(isStarted) throw std::logic_error("Response was already prepared.");
+		this->chunksToSend._mutex.lock();
+		for(int i=0;i<chunksToSend_started.size();i++) {
+			chunksToSend_started[i] = chunksToSend_finished[i] = true;
+		}
+		this->chunksToSend._mutex.unlock();
+		this->chunksToSend.push_back(text, [this](){return this->allFinished();} );
 	}
 }
 
 
-void Request::internalThread() noexcept
+void Request::internalThread(int id) noexcept
 {
 	try {
 		bool const isJson = outputBuilder.prettyOrCompressedJson();
 		Document doc;
 		try {
-			this->process();
+			this->process(); // can use id parameter to parallelize, but this is disabled for now
 			{
-				std::lock_guard<std::mutex> synchScope(this->chunksToSend_access);
-				if (! chunksToSend_started) {
-					if (isJson) {
-						chunksToSend.push_back("[]");
-					}
-				} else if (! chunksToSend_finished) {
-					if (isJson) {
-						if (chunksToSend.empty()) chunksToSend.push_back("]");
-						else chunksToSend.back().push_back(']');
+				this->chunksToSend._mutex.lock();
+				bool isStarted = chunksToSend_started[id];
+				bool isFinished = false;
+				int finishedCount = 0;
+				for(int i=0;i<this->chunksToSend_finished.size();i++) {
+					if(this->chunksToSend_finished[i] == true) {
+						finishedCount++;
 					}
 				}
-				chunksToSend_started = chunksToSend_finished = true;
+				isFinished = (this->chunksToSend_finished.size() - finishedCount) != 1;
+				this->chunksToSend._mutex.unlock();
+				if (! isStarted) {
+					if (isJson) {
+						chunksToSend.push_back("[]", [this](){return this->allFinished();} );
+					}
+				} else if (! isFinished) {
+					if (isJson) {
+						this->chunksToSend._mutex.lock();
+						bool isEmpty = this->chunksToSend.empty();
+						this->chunksToSend._mutex.unlock();
+						if (isEmpty) {
+							chunksToSend.push_back("]", [this](){return this->allFinished();} );
+						} else {
+							this->chunksToSend._mutex.lock();
+							chunksToSend.back().push_back(']');
+							this->chunksToSend._mutex.unlock();
+						}
+					}
+				}
+				this->chunksToSend._mutex.lock();
+				chunksToSend_started[id] = chunksToSend_finished[id] = true;
+				this->chunksToSend._mutex.unlock();
 			}
 			return;  // success
 		} catch (...) {
@@ -188,24 +278,35 @@ void Request::internalThread() noexcept
 		}
 		// try to finish response
 		{
-			std::lock_guard<std::mutex> synchScope(this->chunksToSend_access);
-			if (chunksToSend_finished) return; // TODO - log it somewhere
-			if (chunksToSend_started) {
+			this->chunksToSend._mutex.lock();
+			bool isStarted = chunksToSend_started[id];
+			bool isFinished = chunksToSend_finished[id];
+			this->chunksToSend._mutex.unlock();
+			if (isFinished) return; // TODO - log it somewhere
+			if (isStarted) {
 				std::string row = isJson ? "," : "";
 				row.append(outputBuilder.createOutput(doc) + "\n");
 				if (isJson) row.append("]");
-				chunksToSend.push_back(row);
+				chunksToSend.push_back(row, [this](){return this->allFinished();} );
+				this->chunksToSend._mutex.lock();
 				error = errorType::InternalServerError;
+				this->chunksToSend._mutex.unlock();
 			} else {
-				chunksToSend.push_back( outputBuilder.createOutput(doc) );
+				chunksToSend.push_back( outputBuilder.createOutput(doc), [this](){return this->allFinished();} );
+				this->chunksToSend._mutex.lock();
 				error = doc.error().type;
+				this->chunksToSend._mutex.unlock();
 			}
-			chunksToSend_started = chunksToSend_finished = true;
+			this->chunksToSend._mutex.lock();
+			chunksToSend_started[id] = chunksToSend_finished[id] = true;
+			this->chunksToSend._mutex.unlock();
 		}
 	} catch (...) {
 		// total fail, just finish the response
-		std::lock_guard<std::mutex> synchScope(this->chunksToSend_access);
-		chunksToSend_started = chunksToSend_finished = true;
+		std::lock_guard<std::mutex> synchScope(this->chunksToSend._mutex);
+		for(int i=0;i<chunksToSend_started.size();i++) {
+			chunksToSend_started[i] = chunksToSend_finished[i] = true;
+		}
 		error = errorType::InternalServerError;
 	}
 }
@@ -213,21 +314,35 @@ void Request::internalThread() noexcept
 
 void Request::startProcessingThread(responseFormat respFormat, std::string const & respFields)
 {
-	if (this->processingThread.joinable() || this->chunksToSend_finished) throw std::logic_error("The request is being processed!");
+	for(int t=0;t<MAX_PROCESSING_THREADS;t++) {
+		this->chunksToSend_started.push_back(false);
+		this->chunksToSend_finished.push_back(false);
+	}
 	outputBuilder.setFormat(respFormat, respFields);
-	this->processingThread = std::thread(&Request::internalThread, this);
+	for(int t=0;t<MAX_PROCESSING_THREADS;t++) {
+		this->processingThread.push_back(std::thread(&Request::internalThread, this, t));
+	}
 }
 
 
 void Request::stopProcessingThread() noexcept
 {
 	try {
-		if (this->processingThread.joinable()) {
-			killThread.store(true);
-			processingThread.join();
+		this->chunksToSend._mutex.lock();
+		for(int i=0;i<this->chunksToSend_started.size();i++) {
+			this->chunksToSend_started[i] = this->chunksToSend_finished[i] = true;
 		}
+		this->chunksToSend._mutex.unlock();
+		this->chunksToSend.purge();
+		for(int i=0;i<this->processingThread.size();i++) {
+			if (this->processingThread[i].joinable()) {
+				killThread.store(true);
+				processingThread[i].join();
+			}
+		}
+		this->processingThread.clear();
 		{
-			std::lock_guard<std::mutex> synchScope(this->chunksToSend_access);
+			std::lock_guard<std::mutex> synchScope(this->chunksToSend._mutex);
 			if (this->bytesCount > 0) {
 				std::lock_guard<std::mutex> synchScope2(Request::requestLog_access);
 				Request::requestLog << this->logTime << "\t" << this->documentsCount << "\t" << this->bytesCount << "\t";
@@ -238,6 +353,7 @@ void Request::stopProcessingThread() noexcept
 		// TODO - log it somewhere
 	}
 }
+
 
 void checkNucleotideSequence(std::string const & s)
 {
@@ -278,7 +394,7 @@ void checkAminoAcidSequence(std::string const & s)
 }
 
 // map variant to the main genome
-void Request::mapVariantsToMainGenome(std::vector<Document> & docs) const
+void Request::mapVariantsToMainGenome(std::vector<Document> & docs, alignment pAlignment) const
 {
 	for (auto & doc: docs) {
 		try {
@@ -316,7 +432,7 @@ void Request::mapVariantsToMainGenome(std::vector<Document> & docs) const
 				// check if mapped changes are also canonical on main genome
 				{
 	//std::cout << "ZZZ " << mappedVariant.refId.value << " " << mappedVariant.modifications.front().region.toString() << " " << mappedVariant.modifications.front().originalSequence << std::endl;
-					NormalizedGenomicVariant temp = canonicalizeGenomic(referencesDb, mappedVariant.leftAligned());
+					NormalizedGenomicVariant temp = canonicalizeGenomic(referencesDb, mappedVariant.align(fAlignment, referencesDb));
 	//std::cout << "AAA " << temp.refId.value << " " << temp.modifications.front().region.toString() << " " << temp.modifications.front().originalSequence << std::endl;
 					if (temp != mappedVariant) {
 						if (temp.modifications.size() != mappedVariant.modifications.size()) {
@@ -348,8 +464,54 @@ void print(std::ostream & out, PlainSequenceModification const & sm)
 	out << sm.region.left() << "," << sm.region.right() << "," << sm.originalSequence << "," << sm.newSequence;
 }
 
-void Request::fillVariantsDetails( std::vector<Document> & docs) const
+std::string getClingenPreferredTitle(ReferencesDatabase const * refDb, std::string name, std::string hgvsDefs, std::string proteinHgvsDef, unsigned geneId, DocumentActiveGenomicVariant & d) {
+	// output string
+	std::string clingenPreferredTitle = "";
+	// This is an array of all MANE transcripts of which there are typically only two (one RefSeq and one EBI) BUT we can have more than one pair in a rare case.
+	// The data here is all aggregated from each variants CAR document so it shouldn't be hard to have that at hand
+	// transcript is an object that should contain title, proteinEffects, maneType, molecularConsequences, system, and maneVersion. They mostly come from CAR
+	if(refDb->getAllTranscriptsByNameExists(name)) {
+		auto iter = refDb->getAllTranscriptsByName(name);
+		std::stringstream ss;
+		ss << iter->second.second.refSeqNucleotideAccession;
+		if(geneId != 0) {
+			std::string geneSymbol = refDb->getGeneById(geneId).hgncSymbol;
+			ss << "(" << geneSymbol << ")";
+		}
+		ss << ":";
+		ss << hgvsDefs;
+		if(!proteinHgvsDef.empty()) {
+			ss << " (" << proteinHgvsDef.substr(proteinHgvsDef.find(':')+1) << ")";
+		}
+		clingenPreferredTitle = ss.str();
+	}
+	// This means our first option, relying on the maneTranscripts for the title didn't work (more than likely there weren't any MANE transcripts to use)
+	if (clingenPreferredTitle.empty()) {
+		// So we must instead look at the respective ClinVar esummary document for option 2!
+		for(auto v : d.identifiers.getShortIds(identifierType::ClinVarAllele)) {
+			Identifier_ClinVarAllele const & id = v.as_ClinVarAllele();
+			if (! id.preferredName.empty()) clingenPreferredTitle = id.preferredName;
+		}
+		// Now we check to see if option 2 we just saw populated clingenPreferredTitle.
+		if (clingenPreferredTitle.empty()) { // If not then we have to do option 3 now.
+			// BUT WAIT, option 3 heavily relies on option 1! If we don't have a MANE transcript we can't find the canonical refSeq HGVS! So without us properly knowing what IS the canonical HGVS
+			// via CAR, we can't really find clingenPreferredTitle from option 3. So this is something that needs to be discussed further.
+			// So now lets check one more time to see if clingenPreferredTitle is empty.
+			if (clingenPreferredTitle.empty()) { // if it is empty we have our last option (4) which relies on the respective CAR variant document
+				//genomicAlleleObj = jsonPath.pick('genomicAlleles[*]', carDocument).referenceGenome === 'GRCh38' // Here we got the genomicAllele object which has a reference genome of 'GRCh38'
+				//clingenPreferredTitle = genomicAlleleObj.hgvs[0] // We want the HGVS that starts with "NC_" nothing else (which is always typically the first one but should be validated still).
+			}
+		}
+	}
+	return clingenPreferredTitle;
+}
+
+void Request::fillVariantsDetails( std::vector<Document> & docs, alignment pAlignment ) const
 {
+	if (killThread.load()) {
+		// abort fillVariantsDetails, since request was externally terminated
+		return;
+	}
 	jsonBuilder::DocumentSettings extSourcesConf = outputBuilder.externalSourcesConfiguration();
 
 	bool const genomeBuilds = outputBuilder.returnsGenomeBuildsVariants();
@@ -381,6 +543,16 @@ void Request::fillVariantsDetails( std::vector<Document> & docs) const
 					std::vector<GeneralSeqAlignment> const alignments = referencesDb->getAlignmentsToMainGenome(d.mainDefinition.refId, tempRegion);
 					for (GeneralSeqAlignment const& ga: alignments) {
 						if (! ga.isPerfectMatch()) continue;
+						/*
+						@bugfix: Author: Ronak Patel
+						The identity check is added to take care of incorrect HGVS generation when the sequences don't match
+						For example, if there is a A in position 40 of given sequence and altered to T the hgvs expression
+						will be 40A>T, now if for that variant in a different refseq that aligns to this has T, the HGVS expression should be
+						T40=, In the original implementation, this is not take care of. As a result, eroneous HGVS expressions were generated.
+						As a fist fix with line below, the code will not produce the HGVS expression if the alignment is not identical
+						TO DO: When it is not identical then generate appropriate HGVS.
+						*/
+						if (! ga.isIdentical() ) continue;
 						Alignment const a = ga.toAlignment();
 						NormalizedSequenceModification mod = gmod;
 						mod.region = a.sourceRegion();
@@ -413,7 +585,7 @@ void Request::fillVariantsDetails( std::vector<Document> & docs) const
 						NormalizedGenomicVariant var;
 						var.refId = kv.first;
 						var.modifications = kv.second;
-						PlainVariant plain = var.leftAligned();
+						PlainVariant plain = var.align(fAlignment, referencesDb);
 						if (referencesDb->isSplicedRefSeq(plain.refId)) {
 							if (! transcript) continue;
 							VariantDetailsTranscript v;
@@ -426,15 +598,64 @@ void Request::fillVariantsDetails( std::vector<Document> & docs) const
 								v.definition.modifications.push_back(sp);
 							}
 							v.geneId = referencesDb->getMetadata(v.definition.refId).geneId;
-							v.hgvsDefs = toHgvsModifications(referencesDb,var);
+							std::vector<std::string> names = referencesDb->getNames(v.definition.refId);
+							for(auto & n: names) {
+								if(referencesDb->getAllTranscriptsByNameExists(n)) {
+									try {
+										auto iter = referencesDb->getAllTranscriptsByName(n);
+										if(v.geneId == 0) {
+											v.geneId = iter->second.second.hgncId;
+											break;
+										}
+									} catch ( std::exception const & e ) {
+										std::cerr << e.what() << std::endl;
+									}
+								}
+							}
+							v.hgvsDefs = toHgvsModifications(referencesDb,var,fAlignment);
 							calculateProteinVariation(referencesDb, var, v.proteinHgvsDef, v.proteinHgvsCanonical);
+
+							if(v.proteinHgvsDef.size() > 0) { 
+								for(auto & n: names) {
+									if(referencesDb->getAllTranscriptsByNameExists(n)) {
+										try {
+											auto iter = referencesDb->getAllTranscriptsByName(n);
+											std::stringstream ss;
+											v.maneStatus = iter->second.second.maneStatus;
+											v.maneVersion = referencesDb->getManeVersion();
+											std::string clingenPreferredTitle = getClingenPreferredTitle(referencesDb, n, v.hgvsDefs, v.proteinHgvsDef, v.geneId, d);
+											if(v.maneStatus.compare("MANE Select") == 0) {
+												auto it = d.clingenPreferredTitle.begin();
+												std::string toerase = "";
+												while(it != d.clingenPreferredTitle.end()) {
+													if((*it).substr(0,2) == "NC") {
+														toerase = *it;
+														break;
+													}
+													++it;
+												}
+												if(!toerase.empty()) {
+													d.clingenPreferredTitle.erase(toerase);
+												}
+												d.clingenPreferredTitle.insert(clingenPreferredTitle);
+											}
+											v.maneRefSeqProtein = iter->second.second.refSeqProteinAccession + ":" + v.proteinHgvsDef.substr(v.proteinHgvsDef.find(':')+1);
+											v.maneRefSeqNucleotide = iter->second.second.refSeqNucleotideAccession + ":" + v.hgvsDefs;
+											v.maneEnsemblProtein = iter->second.second.ensemblProteinAccession + ":" + v.proteinHgvsDef.substr(v.proteinHgvsDef.find(':')+1);
+											v.maneEnsemblNucleotide = iter->second.second.ensemblNucleotideAccession + ":" + v.hgvsDefs;
+										} catch ( std::exception const & e ) {
+											std::cerr << e.what() << std::endl;
+										}
+									}
+								}
+							}
 							d.definitionsOnTranscripts.push_back(v);
 						} else if (referencesDb->getMetadata(plain.refId).genomeBuild == "") {
 							if (! genesRegions) continue;
 							VariantDetailsGeneRegion v;
 							v.definition = plain;
 							v.geneId = referencesDb->getMetadata(v.definition.refId).geneId;
-							v.hgvsDefs = toHgvsModifications(referencesDb,var);
+							v.hgvsDefs = toHgvsModifications(referencesDb,var,fAlignment);
 							d.definitionsOnGenesRegions.push_back(v);
 						} else {
 							if (! genomeBuilds) continue;
@@ -442,7 +663,16 @@ void Request::fillVariantsDetails( std::vector<Document> & docs) const
 							v.definition = plain;
 							v.build = parseReferenceGenome(referencesDb->getMetadata(v.definition.refId).genomeBuild);
 							v.chromosome = referencesDb->getMetadata(v.definition.refId).chromosome;
-							v.hgvsDefs = toHgvsModifications(referencesDb,var);
+							v.hgvsDefs = toHgvsModifications(referencesDb,var,fAlignment);
+							if(d.clingenPreferredTitle.empty()) {
+								std::vector<std::string> names = OutputFormatter::refDb->getNames(v.definition.refId);
+								std::string seq = "";
+								for (auto & n: names) if (n.substr(0,2) == "NC") {
+									seq = n;
+									break;
+								}
+								if(referencesDb->getMetadata(plain.refId).genomeBuild.compare("GRCh38") == 0) d.clingenPreferredTitle.insert(seq + ":" + v.hgvsDefs);
+							}
 							d.definitionsOnGenomeBuilds.push_back(v);
 						}
 					} catch (ExceptionCoordinateOutsideReference const & e) {
@@ -454,7 +684,7 @@ void Request::fillVariantsDetails( std::vector<Document> & docs) const
 				VariantDetailsProtein v;
 				v.definition = d.mainDefinition.rightAligned();
 				v.geneId = referencesDb->getMetadata(v.definition.refId).geneId;
-				v.hgvsDefs = toHgvsModifications(referencesDb,d.mainDefinition);
+				v.hgvsDefs = toHgvsModifications(referencesDb,d.mainDefinition,fAlignment);
 				d.definitionOnProtein = v;
 				proteinVariantsToAnalyze[v.definition.refId].push_back(&d);
 			}
@@ -569,7 +799,7 @@ void Request::fillVariantsDetails( std::vector<Document> & docs) const
 					try {
 						for (auto & x: pv.modifications) x.region = referencesDb->convertToUnsplicedRegion(pv.refId, x.region);
 						NormalizedGenomicVariant nv = canonicalizeGenomic(referencesDb, pv);
-						std::string hgvs = toHgvsModifications(referencesDb, nv);
+						std::string hgvs = toHgvsModifications(referencesDb, nv, fAlignment);
 						kv.second[i]->definitionOnProtein.hgvsMatchingTranscriptVariants.push_back(referencesDb->getNames(transcriptId).front() + ":" + hgvs);
 					} catch (std::exception const & e) {
 						std::cerr << e.what() << std::endl;
@@ -609,6 +839,7 @@ void Request::fillVariantsDetails( std::vector<Document> & docs) const
 	if (docs.size() > 1000) std::cout << stopwatch.save_and_restart_sec() << " sec\n" << std::flush;
 }
 
+
 // returns: true - chunk returned, false - no more data
 bool Request::nextChunkOfResponse(std::string & chunk)
 {
@@ -616,20 +847,16 @@ bool Request::nextChunkOfResponse(std::string & chunk)
 	chunk = "";
 	while (true) {
 		{
-			std::lock_guard<std::mutex> synchScope(this->chunksToSend_access);
-			if (this->chunksToSend.empty()) {
-				if (this->chunksToSend_finished) break;
-				// continue to the next iteration if we can still wait, leave the function otherwise
-				if ( std::chrono::system_clock::now() - tsStartWaiting > std::chrono::seconds(15) ) return true;
-			} else {
-				chunk = std::move(this->chunksToSend.front());
-				this->chunksToSend.pop_front();
+			this->chunksToSend._mutex.lock();
+			bool isFinished = this->allFinished();
+			bool isEmpty = this->chunksToSend.empty();
+			this->chunksToSend._mutex.unlock();
+			if (isEmpty && isFinished) break;
+			{
+				chunk = this->chunksToSend.pop_front([this](){return this->allFinished();} );
 				return true;
 			}
 		}
-		std::this_thread::yield();
-		std::this_thread::sleep_for( std::chrono::milliseconds(10) );
-		std::this_thread::yield();
 	}
 	return false;
 }

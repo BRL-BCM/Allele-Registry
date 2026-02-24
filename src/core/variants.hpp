@@ -3,6 +3,7 @@
 
 #include "globals.hpp"
 #include "../commonTools/stringTools.hpp"
+#include "../referencesDatabase/referencesDatabase.hpp"
 #include "identifiers.hpp"
 #include <cstdint>
 
@@ -12,6 +13,13 @@ enum variantCategory
 	, shiftableInsertion = 1
 	, duplication        = 2
 	, shiftableDeletion  = 3
+};
+
+enum alignment 
+{
+	  leftAligned     = 0
+	, rightAligned    = 1
+	, completeAligned = 2
 };
 
 // ================================= plain sequence variant
@@ -146,6 +154,45 @@ struct NormalizedSequenceModification
 		}
 		return sm;
 	}
+	inline PlainSequenceModification completeAligned(ReferencesDatabase const * refDb, ReferenceId refId) const
+	{
+		PlainSequenceModification const left = leftAligned();
+		PlainSequenceModification const right = rightAligned();
+		std::string const sequence = refDb->getSequence(refId, RegionCoordinates(left.region.left(), right.region.right()));
+		PlainSequenceModification sm;
+		switch(category) {
+			case variantCategory::nonShiftable:
+				sm.region.set(left.region.left(), right.region.right());
+				sm.originalSequence = sequence;
+				sm.newSequence = right.newSequence;
+				break;
+			case variantCategory::shiftableInsertion:
+				sm.region.set(left.region.left(), right.region.right());
+				sm.originalSequence = sequence;
+				sm.newSequence = sequence + right.newSequence;
+				break;
+			case variantCategory::duplication:
+				sm.region.set(left.region.left(), right.region.right());
+				sm.originalSequence = sequence;
+				sm.newSequence = sequence + right.newSequence;
+				break;
+			case variantCategory::shiftableDeletion:
+				sm.region.set(left.region.left(), right.region.right());
+				sm.originalSequence = sequence;
+				sm.newSequence = sequence.substr(0, sequence.length()-right.originalSequence.length());
+				break;
+		}
+		return sm;
+	}
+	inline PlainSequenceModification align(alignment pAlignment, ReferencesDatabase const * refDb, ReferenceId refId) const 
+	{
+		switch(pAlignment) {
+			case alignment::leftAligned: return leftAligned();
+			case alignment::rightAligned: return rightAligned();
+			case alignment::completeAligned: return completeAligned(refDb, refId);
+			default: ASSERT(false); // pAlignment should be initialized to a valid value
+		}
+	}
 	inline bool operator<(NormalizedSequenceModification const & b) const
 	{
 		if (region != b.region) return (region < b.region);
@@ -177,6 +224,22 @@ struct NormalizedGenomicVariant
 		for (auto const & e: modifications) sv.modifications.push_back(e.rightAligned());
 		return sv;
 	}
+	inline PlainVariant completeAligned(ReferencesDatabase const * refDb) const
+	{
+		PlainVariant sv;
+		sv.refId = refId;
+		for (auto const & e: modifications) sv.modifications.push_back(e.completeAligned(refDb, refId));
+		return sv;
+	}
+	inline PlainVariant align(alignment pAlignment, ReferencesDatabase const * refDb = NULL) const 
+	{
+		switch(pAlignment) {
+			case alignment::leftAligned: return leftAligned();
+			case alignment::rightAligned: return rightAligned();
+			case alignment::completeAligned: return completeAligned(refDb);
+			default: ASSERT(false); // pAlignment should be initialized to a valid value
+		}
+	}
 	inline bool operator<(NormalizedGenomicVariant const & v) const
 	{
 		if (refId != v.refId) return (refId < v.refId);
@@ -203,6 +266,22 @@ struct NormalizedProteinVariant
 		sv.refId = refId;
 		for (auto const & e: modifications) sv.modifications.push_back(e.rightAligned());
 		return sv;
+	}
+	inline PlainVariant completeAligned(ReferencesDatabase const * refDb) const
+	{
+		PlainVariant sv;
+		sv.refId = refId;
+		for (auto const & e: modifications) sv.modifications.push_back(e.completeAligned(refDb, refId));
+		return sv;
+	}
+	inline PlainVariant align(alignment pAlignment, ReferencesDatabase const * refDb = NULL) const 
+	{
+		switch(pAlignment) {
+			case alignment::leftAligned: return leftAligned();
+			case alignment::rightAligned: return rightAligned();
+			case alignment::completeAligned: return completeAligned(refDb);
+			default: ASSERT(false); // pAlignment should be initialized to a valid value
+		}
 	}
 	inline bool operator<(NormalizedProteinVariant const & v) const
 	{
@@ -235,6 +314,12 @@ struct VariantDetailsTranscript
 	std::string hgvsDefs;
 	std::string proteinHgvsDef = "";
 	std::string proteinHgvsCanonical = "";
+	std::string maneVersion = "";
+	std::string maneStatus = "";
+	std::string maneRefSeqProtein = "";
+	std::string maneRefSeqNucleotide = "";
+	std::string maneEnsemblProtein = "";
+	std::string maneEnsemblNucleotide = "";
 };
 
 struct VariantDetailsProtein

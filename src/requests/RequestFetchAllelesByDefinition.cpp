@@ -9,7 +9,11 @@
 #include <boost/algorithm/string.hpp>
 #include "parsers.hpp"
 #include "../externalSources/externalSources.hpp"
+#include <fstream>
+#include <boost/thread/thread.hpp>
+#include <chrono>
 
+using namespace std::chrono;
 
 struct FileColumn
 {
@@ -30,6 +34,7 @@ struct FileColumn
 
 
 struct RequestFetchAllelesByDefinition::Pim {
+  std::ofstream payload;
 	std::shared_ptr<std::vector<char>> body;
 	bool vcfFile;
 	bool registerIfNotFound;
@@ -80,6 +85,10 @@ RequestFetchAllelesByDefinition::RequestFetchAllelesByDefinition
 	) : Request(documentType::activeGenomicVariant), pim(new Pim)
 {
 	std::unique_ptr<Pim> pimGuard(pim);
+	milliseconds ms = duration_cast< milliseconds >( system_clock::now().time_since_epoch() );
+	std::stringstream ss;
+	ss << "/usr/local/brl/local/var/payload" << boost::this_thread::get_id() << "-" << ms.count();
+	//pim->payload.open(ss.str());
 	pim->body = pBody;
 	if (columnsDefinitions == "vcf") {
 		pim->vcfFile = true;
@@ -97,6 +106,7 @@ RequestFetchAllelesByDefinition::RequestFetchAllelesByDefinition
 RequestFetchAllelesByDefinition::~RequestFetchAllelesByDefinition()
 {
 	stopProcessingThread();
+	//pim->payload.close();
 	delete pim;
 }
 
@@ -201,7 +211,7 @@ void RequestFetchAllelesByDefinition::process()
 		parser.reset( new ParserTabSeparated(pim->body) );
 	}
 
-	unsigned const chunkSize = 256*1024;
+	unsigned const chunkSize = 1*1024;
 	std::vector<unsigned> inputLines;
 	std::vector<std::vector<std::string>> parsedLines;
 	std::vector<Document> documents;
@@ -211,6 +221,9 @@ void RequestFetchAllelesByDefinition::process()
 	documents.reserve(chunkSize);
 	externalSourcesLinksParams.reserve(chunkSize);
 
+	//parser->logPayload(pim->payload);
+	//pim->payload.flush();
+
 		while (true) {
 			documents.clear();
 			externalSourcesLinksParams.clear();
@@ -218,11 +231,10 @@ void RequestFetchAllelesByDefinition::process()
 			// ---- logs
 			std::string const logPrefix = boost::lexical_cast<std::string>(parser->numberOfParsedBytes()/(1024*1024)) + " MB -> ";
 			Stopwatch stopwatch;
-			std::cout << logPrefix << "parse payload ... " << std::flush;
 
 			if ( ! parser->parseRecords(parsedLines,inputLines,chunkSize) ) {
 				break; // no more data
-			}
+			} 
 
 			// ====================== parse & convert to canonical allele
 

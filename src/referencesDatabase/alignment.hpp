@@ -99,6 +99,12 @@ struct GeneralSeqAlignment
 		if (elements.size() != 1 || elements[0].unalignedSeq != "") return false;
 		return elements[0].alignment.isPerfectMatch();
 	}
+	// This helper method is implemented by Ronak Patel, see it's use in Request.cpp for details.
+	bool isIdentical() const 
+	{
+		if (elements.size() != 1 || elements[0].unalignedSeq != "") return false;
+		return elements[0].alignment.isIdentical();	
+	}
 	// convert to simple alignments if possible (GeneralAlignment must be compact)
 	Alignment toAlignment() const
 	{

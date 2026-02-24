@@ -1,0 +1,155 @@
+.new-caid-header {
+    background-color: #3a9ee0;
+    color: #fff;
+    font-size: 2em;
+    padding: 10px;
+}
+
+.show-caid {
+    font-style: italic;
+}
+
+.row.not-found {
+    margin-top: 10px;
+}
+
+.genomic-alleles {
+    margin-top: 10px;
+}
+
+.header-row{
+    font-weight: bold;
+    text-align: center;
+}
+
+.vector-h5 {
+    font-style: italic;
+    font-weight: 700;
+}
+
+#not-present-note {
+    font-size: 0.5em;
+}
+
+.extlink::after {
+    font-family: "FontAwesome";
+    content: "\f08e";
+}
+.verysmall {
+    font-size: 0.5em;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+a {
+    text-decoration: none;
+    color: #fff;
+}
+.panel-heading {
+    background-color: #aedcc0;
+    color: #343e3d;
+    font-size: 1.3em;
+    border-radius: 0px;
+}
+.panel-body {
+    border: 1px solid #aedcc0;
+    font-size: 1.1em;
+    border-radius: 0px;
+}
+.super-panel-heading {
+    background-color: #aedcc0;
+    color: #343e3d;
+    font-size: 1.5em;
+    border-radius: 0px;
+}
+.super-panel-body {
+    border: 1px solid #aedcc0;
+    font-size: 1.1em;
+    border-radius: 0px;
+}
+
+.caid-gene {
+    padding: 10px;
+    font-style: normal;
+}
+.show-gene {
+    font-size: 0.7em;
+}
+
+.white-bg {
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+.label {
+    border: 1px solid #fff;
+    border-radius: 3px;
+    color: #fff;
+}
+.external-identifiers {
+    background: #cbf3ff;
+    color: #666666;
+    padding: 10px;
+}
+.extlink-resource {
+    color: #666666 ;
+    font-weight: 400;
+}
+.prop {
+    font-weight: 600;
+}
+.systematic-links {
+    background: #e8f1f2;
+    color: #666666;
+    padding: 10px;
+}
+.fa {
+    padding-left: 5px;
+}
+
+.vector-panel {
+    background-color: #fff;
+    border: 0px solid black;
+}
+.vector-heading {
+    background-color: #fff;
+    font-size: 1.5em;
+    border-bottom: 1px solid black;
+    font-style: italic;
+    padding: 0px;
+    font-weight: 600;
+}
+p {
+    font-weight: 400;
+    padding-top: 5px;
+}
+a:hover *, a:focus * {
+    color: black;
+    font-weight:700;
+}
+.btn-info, .btn-info:hover, .btn-info:focus {
+    border-radius : 0px;
+    background-color: #26c8ff;
+    border-color: #26c8ff;
+}
+.danger {
+    background-color: #f2dede;
+    border: 1px solid red;
+}
+
+.extlink-value::after {
+    font-family: "FontAwesome";
+    content: "\f08e";
+    padding-left: 3px;
+    font-size: 0.8em;
+}
+
+.break-words{
+    word-break: break-all;
+}
+
+.popover {
+    color: #000;
+}
+
+.text-center .small {
+    color: #000;
+}

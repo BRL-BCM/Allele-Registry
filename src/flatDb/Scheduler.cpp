@@ -43,11 +43,11 @@ namespace flatDb {
 		if ( numberOfPages  >= 2*pagesPerIndexNode ) {
 			// ----- load index
 			typename IndexNode::SP indexNode2;
-			storage->readPages(0, pagesPerIndexNode, pim->bufferForIndexNode);
+			storage->readIndexPages(0, pagesPerIndexNode, pim->bufferForIndexNode);
 			try {
 				indexNode = IndexNode::createFromBuffer(this, keySize, storage->pageSize, pagesPerIndexNode*storage->pageSize, true, pim->bufferForIndexNode);
 			} catch (...) {}
-			storage->readPages(pagesPerIndexNode, pagesPerIndexNode, pim->bufferForIndexNode);
+			storage->readIndexPages(pagesPerIndexNode, pagesPerIndexNode, pim->bufferForIndexNode);
 			try {
 				indexNode2 = IndexNode::createFromBuffer(this, keySize, storage->pageSize, pagesPerIndexNode*storage->pageSize, false, pim->bufferForIndexNode);
 			} catch (...) {}
@@ -85,7 +85,7 @@ namespace flatDb {
 			indexNode = IndexNode::createEmpty(this, keySize, storage->pageSize, pagesPerIndexNode*storage->pageSize);
 			indexNode->entries.push_back( DataNode::createEmpty(this,0) );
 			indexNode->writeToBuffer( pim->bufferForIndexNode );
-			storage->writePages( (indexNode->firstCopy ? 0 : pagesPerIndexNode), pagesPerIndexNode, pim->bufferForIndexNode );  // TODO - combine with flush ?
+			storage->writeIndexPages( (indexNode->firstCopy ? 0 : pagesPerIndexNode), pagesPerIndexNode, pim->bufferForIndexNode );  // TODO - combine with flush ?
 			storage->flush();
 		} else {
 			throw std::runtime_error("Incorrect file size");
@@ -224,7 +224,7 @@ namespace flatDb {
 
 			// write new index node
 			indexNode->writeToBuffer( pim->bufferForIndexNode );
-			storage->writePages( (indexNode->firstCopy ? 0 : pagesPerIndexNode), pagesPerIndexNode, pim->bufferForIndexNode );  // TODO - combine with flush?
+			storage->writeIndexPages( (indexNode->firstCopy ? 0 : pagesPerIndexNode), pagesPerIndexNode, pim->bufferForIndexNode );  // TODO - combine with flush?
 //sw.reset_and_restart();
 			storage->flush();
 //std::cout << sw.get_time_ms() << std::endl;

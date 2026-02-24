@@ -1,0 +1,234 @@
+<% @hash_response = JSON.parse(@response_from_registry) %>
+<% %>
+<!-- section class="white-bg" -->
+  <% logger.error("REGISTRY - Rendering view") %>
+  <div class="container">
+   <div class="row new-caid-header">
+     <div class="col-sm-8">
+        <div class="show-caid">
+            <%= @hash_response["@id"].match(/CA[0-9]+/) %>
+        </div>
+        <div class="show-gene">
+            <% logger.error("REGISTRY - Show Gene") %>
+            <small><% 
+                    begin 
+                     %>
+                     <%= @gene_response.length > 1 ? "Gene: " : "Genes: " %>
+                     <% @gene_response.each do |given_gene|   %>
+                     <%=    given_gene["externalRecords"]["HGNC"]["symbol"]  %>
+                      <span class="verysmall label">
+                       <a class="extlink" href=<%=given_gene["externalRecords"]["NCBI"]["@id"]%> target="_blank">
+                        NCBI
+                       </a>
+                      </span>
+                      <span class="verysmall label">
+                        <a class="extlink" href=<%=given_gene["externalRecords"]["HGNC"]["@id"]%> target="_blank">
+                         HGNC
+                        </a>
+                      </span>
+                      <span class="verysmall label">
+                        <a class="extlink" href=http://genome.ucsc.edu/cgi-bin/hgGene?org=human&db=hg38&hgg_gene=<%=given_gene["externalRecords"]["HGNC"]["symbol"]%> target="_blank">
+                         UCSC
+                        </a>
+                      </span>
+                      <span class="verysmall label">
+                        <a class="extlink" href=http://www.omim.org/search/?search=gene_id:<%=given_gene["externalRecords"]["NCBI"]["id"]%> target="_blank">
+                         OMIM
+                        </a>
+                      </span>
+                      <span class="verysmall label">
+                        <a class="extlink" href=http://exac.broadinstitute.org/awesome?query=<%=given_gene["externalRecords"]["HGNC"]["symbol"]%> target="_blank">
+                         ExAC
+                        </a>
+                      </span>
+                      <span class="verysmall label">
+                        <a class="extlink" href=http://gnomad.broadinstitute.org/awesome?query=<%=given_gene["externalRecords"]["HGNC"]["symbol"]%> target="_blank">
+                         gnomAD
+                        </a>
+                      </span>
+                     <%
+                     end 
+                    rescue 
+                     ""
+                    end
+                    %>
+            </small>
+            <% logger.error("REGISTRY - Done Gene") %>
+        </div>
+     </div>
+  </div>
+ </div>
+
+<!-- /section -->
+
+<!-- show external links now -->
+<!--
+<%# logger.error("REGISTRY - Done Gene") %>
+  <div class="container">
+   <div class="row external-identifiers">
+     <%# @hash_response["externalRecords"].each do |i| %>
+       <div class="col-sm-4">
+         <%# if @hash_response["externalRecords"].
+                                    keys.include?("ClinVarVariations") %>
+            <%#=   %>
+         <%# end %>
+       </div>
+     <%# end %>
+   </div>
+  </div>
+-->
+
+<!-- /section -->
+<% logger.error("REGISTRY - Render allele") %>
+<section class="white-bg">
+  <div class="container">
+   <div class="panel super-panel">
+    <div class="panel-heading super-panel-heading">
+      <div class="row">
+        <div class="col-sm-12">
+          <%= @hash_response["@id"].match(/CA[0-9]+/) %> <br>
+        </div>
+      </div>
+    </div>
+    <div class="panel-body super-panel-body">
+     <div class="row">
+       <% logger.error("REGISTRY - Render genomic allele") %>
+       <!-- Genomic alleles -->
+       <% if @has_genomic_alleles %>
+         <div class="col-sm-12">
+            <div class="panel">
+               <div class="panel-heading">
+                 Genomic Alleles
+               </div>
+               <div class="panel-body">
+                  <%
+                    if @has_genomic_alleles
+                       @hash_response["genomicAlleles"].each do |allele|
+                          allele["hgvs"].each do |expression|
+                  %>
+                     <div class="col-sm-6">
+                  <%=            expression %><br>
+                     </div>
+                  <%
+                          end
+                       end
+                    end
+                  %>
+               </div>
+            </div>
+         </div>
+       <% end %>
+       <!-- Transcript alleles -->
+       <% logger.error("REGISTRY - Render transcript allele") %>
+       <% if @has_transcript_alleles %>
+         <div class="col-sm-12">
+            <div class="panel">
+               <div class="panel-heading">
+                 Transcript Alleles
+               </div>
+               <div class="panel-body">
+                  <%
+                    if @has_genomic_alleles
+                       @hash_response["transcriptAlleles"].each do |allele|
+                          allele["hgvs"].each do |expression|
+                  %>
+                             <div class="col-sm-6">
+                              <%= expression %>
+                             </div>
+                  <%
+                          end
+                       end
+                    end
+                  %>
+               </div>
+            </div>
+         </div>
+       <% end %>
+   </div>
+    <a class="twitter-share-button"
+      href="https://twitter.com/intent/tweet"
+      data-text="Allele #<%=@hash_response["@id"].match(/CA[0-9]+/)%> is ? for OMIM: ? as cited in (PMID: ?)"
+      data-url="http://reg.genome.network/allele/<%=@hash_response["@id"].match(/CA[0-9]+/)%>"
+      >
+       Tweet
+    </a>
+<!--
+      data-url="http://reg.genome.network/allele/<%=@hash_response["@id"].match(/CA[0-9]+/)%>.html"
+      data-hashtags="<%=@hash_response["@id"].match(/CA[0-9]+/)%>"
+-->
+</section>
+
+<style>
+.extlink::after {
+  font-family: "FontAwesome";
+  content: "\f08e";
+}
+.verysmall {
+  font-size: 0.5em;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+a {
+  text-decoration: none;
+  color: #fff;
+} 
+a::hover {
+  text-decoration: none;
+  color: #fff;
+}
+.panel-heading {
+  background-color: #aedcc0;
+  color: #343e3d;
+  font-size: 1.3em;
+  border-radius: 0px;
+}
+.panel-body {
+  border: 1px solid #aedcc0;
+  font-size: 1.1em;
+  border-radius: 0px;
+}
+.super-panel-heading {
+  background-color: #aedcc0;
+  color: #343e3d;
+  font-size: 1.5em;
+  border-radius: 0px;
+}
+.super-panel-body {
+  border: 1px solid #aedcc0;
+  font-size: 1.1em;
+  border-radius: 0px;
+}
+.new-caid-header {
+  background-color: #26c8ff;
+  color: #fff;
+  font-size: 2em;
+  padding: 5px;
+}
+.caid-gene {
+  padding: 10px;
+  font-style: normal;
+}
+.show-gene {
+  font-size: 0.7em;
+}
+.show-caid {
+  font-style: italic;
+}
+.white-bg {
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+.label {
+  border: 1px solid #fff;
+  border-radius: 3px;
+  color: #fff;
+}
+.col-lg-1, .col-lg-10, .col-lg-11, .col-lg-12, .col-lg-2, .col-lg-3, .col-lg-4, .col-lg-5, .col-lg-6, .col-lg-7, .col-lg-8, .col-lg-9, .col-md-1, .col-md-10, .col-md-11, .col-md-12, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9, .col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-xs-1, .col-xs-10, .col-xs-11, .col-xs-12, .col-xs-2, .col-xs-3, .col-xs-4, .col-xs-5, .col-xs-6, .col-xs-7, .col-xs-8, .col-xs-9 {
+  padding: 5px;
+}
+.external-identifiers {
+  background: #cbf3ff;
+  color: #666666;
+}
+ 
+</style>

@@ -1,0 +1,99 @@
+<% @respObj = JSON.parse(@response_from_registry) %>
+<% if(@status != 200 and @status != 404) %>
+  <div class="row jumbotron not-found">
+    <p>
+      <%=@respObj["errMsg"] %>
+    </p>
+  </div>
+<% else %>
+  <%
+    genomicAllelesObj = nil
+    if(@status == 404)
+      genomicAllelesObj = @respObj["parsedDescriptor"] if(@respObj.key?("parsedDescriptor"))
+      cnvId = ""
+    else
+      genomicAllelesObj = (@respObj.is_a?(Array) ? @respObj[0] : @respObj)
+      cnvId = genomicAllelesObj["CNVid"]
+    end
+
+  %>
+  <%
+    if(@status == 200)
+      @regRequired = false
+  %>
+
+    <div class="row new-caid-header">
+      <div class="col-sm-8">
+        <div class="show-caid">
+          Canonical Allele Identifier (CNV): <b><%=cnvId%></b>
+        </div>
+      </div>
+    </div>
+  <% else %>
+    <%
+      @regRequired = true
+      @regLink = "<a href=\"#\" data-toggle=\"popover\" title=\"Coming soon!\" data-trigger=\"focus\" data-content=\"This feature is under development and will be made available as soon as possible.\">"
+      @showGeneInfo = false
+    %>
+    <%= render :partial => "genboree_registry_query/register_new_allele" %>
+  <% end %>
+  <% if ( genomicAllelesObj ) %>
+    <%
+      @calcLink = "<a href=\"#\" data-toggle=\"popover\" title=\"Coming soon!\" data-trigger=\"focus\" data-content=\"This feature is under development and will be made available as soon as possible.\"><span class=\"extlink-resource\">Calculator<span class=\"fa fa-calculator\"></span></span></a>"
+    %>
+    <% if(!@regRequired and cnvId != "") %>
+      <%= render :partial => "genboree_registry_query/systematic_links", :locals => { :caid => cnvId } %>
+    <% end %>
+    <div class="row genomic-alleles">
+      <div class="col-xs-12">
+        <% if(@status == 200) %>
+          <a href="/allele/<%=cnvId%>">Link to JSON-LD document</a>
+        <% end %>
+        <h4 class="vector-h5">Genomic Alleles</h4>
+        <table class="table table-responsive">
+          <thead>
+          <tr>
+            <th>Chromosome</th>
+            <th>Descriptor</th>
+            <th>Genome Assembly</th>
+            <th>Inner Start</th>
+            <th>Inner End</th>
+            <th>Cytoband</th>
+            <th>Copies</th>
+          </tr>
+          </thead>
+          <tbody>
+          <%
+            # Depending on whether this page is being rendered as a result of querying by descriptor or CNVid, the response object may be an arroy or hash respectively.
+            genomicAllelesObj["genomicAlleles"].each { |gaObj|
+              chr = gaObj["chromosome"]
+              descriptor = gaObj["descriptor"]
+              refGenome = gaObj["referenceGenome"]
+              coordStart = gaObj["coordinates"]["innerStart"]
+              coordEnd = gaObj["coordinates"]["innerEnd"]
+              copies = gaObj["coordinates"]["copies"]
+              cytoband = gaObj["coordinates"]["cytoband"]
+          %>
+            <tr>
+              <td><%=chr%></td>
+              <td><%=descriptor%></td>
+              <td><span class="badge assembly-badge"><%=refGenome%></span></td>
+              <td><%=coordStart%></td>
+              <td><%=coordEnd%></td>
+              <td><%=cytoband%></td>
+              <td><%=copies%></td>
+            </tr>
+          <%
+            }
+          %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+<% end %>
+<script>
+  $(document).ready(function(){
+    $('[data-toggle="popover"]').popover();
+  });
+</script>

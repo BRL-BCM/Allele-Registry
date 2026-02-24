@@ -15,6 +15,9 @@
 #include <map>
 #include <fstream>
 
+std::string ReferencesDatabase::getManeVersion() const {
+    return maneVersion;
+}
 
 inline std::string translateToAminoAcid2(std::string const & seq)
 {
@@ -199,7 +202,10 @@ struct ReferencesDatabase::Pim
 	std::map<std::string, std::vector<unsigned>> genesBySymbol; // symbol -> hgncId
 
 	// Data store from Mane files
-	std::vector<Mane> maneTranscripts;
+	std::vector<std::multimap<std::string, Mane> > maneTranscripts;
+
+	// Data store for Mane files, indexed by name
+	std::map<std::string, std::pair<std::string, Mane> > maneTranscriptsByName;
 
 	// Data stored from Sequnce id to digest and vice versa
 	std::map<std::string, std::string> idToDigest;
@@ -472,23 +478,27 @@ void ReferencesDatabase::Pim::readMane(std::string const & filename)
 	unsigned const colHgncId = 2;
 	unsigned const colHgncSymbol = 3;
 	unsigned const colGeneName = 4;
-	unsigned const colRefSeqAccession = 5;
-	unsigned const colEnsemblAccession = 6;
-	unsigned const colManeStatus = 7;
-	unsigned const colGRCh38Chromosome = 8;
-	unsigned const colChromsomeStart = 9;
-	unsigned const colChromosomeEnd = 10;
-	unsigned const colStrand = 11;
+	unsigned const colRefSeqNucleotideAccession = 5;
+	unsigned const colRefSeqProteinAccession = 6;
+	unsigned const colEnsemblNucleotideAccession = 7;
+	unsigned const colEnsemblProteinAccession = 8;
+	unsigned const colManeStatus = 9;
+	unsigned const colGRCh38Chromosome = 10;
+	unsigned const colChromsomeStart = 11;
+	unsigned const colChromosomeEnd = 12;
+	unsigned const colStrand = 13;
 
-	std::vector<std::string> colsNames(12);
+	std::vector<std::string> colsNames(14);
 
 	colsNames[colNcbiGeneId] = "#NCBI_GeneID";
 	colsNames[colEnsemblGene] = "Ensembl_Gene";
 	colsNames[colHgncId] = "HGNC_ID";
 	colsNames[colHgncSymbol] = "symbol";
 	colsNames[colGeneName] = "name";
-	colsNames[colRefSeqAccession] = "RefSeq";
-	colsNames[colEnsemblAccession] = "Ensembl_ID";
+	colsNames[colRefSeqNucleotideAccession] = "RefSeq_nuc";
+	colsNames[colRefSeqProteinAccession] = "RefSeq_prot";
+	colsNames[colEnsemblNucleotideAccession] = "Ensembl_nuc";
+	colsNames[colEnsemblProteinAccession] = "Ensembl_prot";
 	colsNames[colManeStatus] = "MANE_status";
 	colsNames[colGRCh38Chromosome] = "GRCh38_chr";
 	colsNames[colChromsomeStart] = "chr_start";
@@ -504,19 +514,34 @@ void ReferencesDatabase::Pim::readMane(std::string const & filename)
 			if(hgnc_id_full != ""){
 				// std::cerr << hgnc_id_full << std::endl;
 				unsigned const hgnc_id = boost::lexical_cast<unsigned>(hgnc_id_full.substr(5,hgnc_id_full.size()));
-				if (maneTranscripts.size() <= hgnc_id) maneTranscripts.resize(hgnc_id+1);
-				maneTranscripts[hgnc_id].hgncId = hgnc_id;
-				maneTranscripts[hgnc_id].refSeqAccession = r[colRefSeqAccession]; 		
-				maneTranscripts[hgnc_id].ensemblAccession = r[colEnsemblAccession]; 		
-				maneTranscripts[hgnc_id].hgncSymbol = r[colHgncSymbol]; 
+				if (maneTranscripts.size() <= hgnc_id) {
+					maneTranscripts.resize(hgnc_id+1);
+				}
+				std::string status = r[colManeStatus];
+				Mane mane;
+				mane.hgncId = hgnc_id;
+				mane.refSeqNucleotideAccession = r[colRefSeqNucleotideAccession];      
+				mane.refSeqProteinAccession = r[colRefSeqProteinAccession];            
+				mane.ensemblNucleotideAccession = r[colEnsemblNucleotideAccession];
+				mane.ensemblProteinAccession = r[colEnsemblProteinAccession];          
+				mane.maneStatus = status;
+				mane.hgncSymbol = r[colHgncSymbol];
+				auto dat = std::make_pair(status, mane);
+				maneTranscripts[hgnc_id].insert(dat);
+				maneTranscriptsByName[mane.refSeqNucleotideAccession] = dat;
+				maneTranscriptsByName[mane.refSeqProteinAccession] = dat;
+				maneTranscriptsByName[mane.ensemblNucleotideAccession] = dat;
+				maneTranscriptsByName[mane.ensemblProteinAccession] = dat;
 			}
 			else {
-				std::cerr << "WARNING: No HGNC Symbol for NCBI => " << r[colNcbiGeneId]  << "ENBSEMBL => " << r[colEnsemblAccession] ;
+				std::cerr << "WARNING: No HGNC Symbol for NCBI => " << r[colNcbiGeneId]  << "ENBSEMBL => " << r[colEnsemblNucleotideAccession] ;
 			}
 		}
 
 		for (auto && maneTranscript : maneTranscripts) {
-			preferredTranscriptByHgncSymbol.insert({ maneTranscript.hgncSymbol, maneTranscript.refSeqAccession }); 
+			for(auto maneIter : maneTranscript) {
+				preferredTranscriptByHgncSymbol.insert({ maneIter.second.hgncSymbol, maneIter.second.refSeqNucleotideAccession });
+			}
 		}
 
     } catch (std::exception const & e) {
@@ -633,8 +658,7 @@ void ReferencesDatabase::Pim::readTranscriptMetadata( std::string const & filena
 			if (r[colIdGene].substr(0,4) == "ENSG") r[colIdGene] = r[colIdGene].substr(0, r[colIdGene].find('.')); // cut version from ENSEMBLE genes
 			unsigned geneId = std::numeric_limits<unsigned>::max();
 			for (unsigned id: genesBySymbol[r[colIdGene]]) {
-				if (boost::lexical_cast<std::string>(genes[id].refSeqId) == r[colIdGene]) {
-					if (geneId < genes.size()) throw std::runtime_error("Not uniquely defined gene: " + r[colIdGene]);
+				if (geneId < genes.size()) {
 					geneId = id;
 				}
 			}
@@ -837,6 +861,11 @@ GeneralSeqAlignment ReferencesDatabase::Pim::calculateGeneralAlignment
 		}
 	}
 	return result;
+}
+
+unsigned ReferencesDatabase::getNumMetadata() const 
+{
+	return pim->metadata.size();
 }
 
 unsigned ReferencesDatabase::hgncSymbolToGeneId(std::string const & geneName) const
@@ -1480,7 +1509,27 @@ std::string ReferencesDatabase::getPreferredTranscriptFromHGNCSymbol(std::string
 
 std::string ReferencesDatabase::getPreferredTranscriptFromHGNCId(unsigned hgncId) const
 {
-	return (pim->maneTranscripts.at(hgncId)).refSeqAccession;
+	std::string result;
+	auto range = (pim->maneTranscripts.at(hgncId)).equal_range("MANE Select");
+	if(range.first != range.second) {
+		result = range.first->second.refSeqNucleotideAccession;
+	}
+	return result;
+}
+
+std::multimap<std::string, Mane> ReferencesDatabase::getAllTranscriptsFromHGNCId(unsigned hgncId) const
+{
+	return pim->maneTranscripts.at(hgncId);
+}
+
+bool ReferencesDatabase::getAllTranscriptsByNameExists(std::string const & name) const
+{
+	return pim->maneTranscriptsByName.find(name) != pim->maneTranscriptsByName.end();
+}
+
+std::map<std::string, std::pair<std::string, Mane> >::const_iterator ReferencesDatabase::getAllTranscriptsByName(std::string const & name) const
+{
+	return pim->maneTranscriptsByName.find(name);
 }
 
 std::vector<ReferenceId> ReferencesDatabase::getReferencesByName(std::string const & name) const
@@ -1575,7 +1624,7 @@ std::string ReferencesDatabase::getDigestFromSequenceAccession(std::vector<std::
 		// std::cout << "rs from getDigest => " << rs << std::endl;
 		std::map<std::string, std::string>::iterator it = (pim->idToDigest).find(rs) ;
 		if( it == pim->idToDigest.end() ) {
-			std::cerr << "If scenario!" << std::endl;
+			// std::cerr << "If scenario!" << std::endl;
 		} else {
 			// std::cerr << "Else scenario, should return now!" << std::endl;
 			return(it->second);

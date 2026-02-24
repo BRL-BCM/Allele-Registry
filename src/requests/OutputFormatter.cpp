@@ -45,7 +45,9 @@ OutputFormatter::OutputFormatter(documentType docType) : pim(new Pim)
 		jsonBuilder::DocumentStructure<label> & docActiveGenomicVariant = pim->docSchema;
 		docActiveGenomicVariant[label::_at_context].addNode();
 		docActiveGenomicVariant[label::_at_id     ].addNode();
+		docActiveGenomicVariant[label::locus      ].addNode();
 		docActiveGenomicVariant[label::type].addNode();
+		docActiveGenomicVariant[label::communityStandardTitle].addNode();
 		docActiveGenomicVariant[label::externalRecords][label::dbSNP][label::_at_id].addNode();
 		docActiveGenomicVariant[label::externalRecords][label::dbSNP][label::rs].addNode();
 		docActiveGenomicVariant[label::externalRecords][label::ClinVarAlleles][label::_at_id].addNode();
@@ -78,6 +80,12 @@ OutputFormatter::OutputFormatter(documentType docType) : pim(new Pim)
 		docActiveGenomicVariant[label::genomicAlleles][label::coordinates][label::allele].addNode();
 		docActiveGenomicVariant[label::genomicAlleles][label::referenceGenome].addNode();
 		docActiveGenomicVariant[label::genomicAlleles][label::chromosome].addNode();
+		docActiveGenomicVariant[label::transcriptAlleles][label::MANE][label::maneVersion].addNode();
+		docActiveGenomicVariant[label::transcriptAlleles][label::MANE][label::maneStatus].addNode();
+		docActiveGenomicVariant[label::transcriptAlleles][label::MANE][label::nucleotide][label::Ensembl][label::hgvs].addNode();
+		docActiveGenomicVariant[label::transcriptAlleles][label::MANE][label::nucleotide][label::RefSeq][label::hgvs].addNode();
+		docActiveGenomicVariant[label::transcriptAlleles][label::MANE][label::protein][label::Ensembl][label::hgvs].addNode();
+		docActiveGenomicVariant[label::transcriptAlleles][label::MANE][label::protein][label::RefSeq][label::hgvs].addNode();
 		docActiveGenomicVariant[label::transcriptAlleles][label::hgvs].addNode();
 		docActiveGenomicVariant[label::transcriptAlleles][label::referenceSequence].addNode();
 		docActiveGenomicVariant[label::transcriptAlleles][label::coordinates][label::start].addNode();
@@ -134,8 +142,7 @@ OutputFormatter::OutputFormatter(documentType docType) : pim(new Pim)
 		docGene[label::externalRecords][label::HGNC][label::symbol].addNode();
 		docGene[label::externalRecords][label::NCBI][label::_at_id].addNode();
 		docGene[label::externalRecords][label::NCBI][label::id].addNode();
-		docGene[label::externalRecords][label::MANEPrefRefSeq][label::_at_id].addNode();
-		docGene[label::externalRecords][label::MANEPrefRefSeq][label::id].addNode();
+		docGene[label::externalRecords][label::MANE].addNode();
 	} else if (docType == documentType::coordinateTransform) {
 		jsonBuilder::DocumentStructure<label> & docCoordinates = pim->docSchema;
 		docCoordinates[label::_at_context].addNode();
@@ -351,14 +358,16 @@ inline void OutputFormatter::Pim::variantCommon(jsonBuilder::NodeOfJsonTree<labe
 {
 	std::vector<std::string> names = OutputFormatter::refDb->getNames(v.definition.refId);
 	std::string carRsId = "";
-	for (auto & n: names) if (n.substr(0,2) == "RS") {
+	for (auto & n: names) if (n.size() > 0 && n.substr(0,2) == "RS") {
 		carRsId = n;
 		n = names.back();
 		names.pop_back();
 		break;
 	}
 	for (auto & n: names) ob[label::hgvs].push_back(n + ":" + v.hgvsDefs);
-	ob[label::referenceSequence] = getURI("refseq/RS", boost::lexical_cast<unsigned>(carRsId.substr(2)));
+	if(carRsId.size() > 0) {
+		ob[label::referenceSequence] = getURI("refseq/RS", boost::lexical_cast<unsigned>(carRsId.substr(2)));
+	}
 }
 
 inline void OutputFormatter::Pim::object(jsonBuilder::NodeOfJsonTree<label> const & ob, VariantDetailsGenomeBuild const & v)
@@ -391,9 +400,21 @@ inline void OutputFormatter::Pim::object(jsonBuilder::NodeOfJsonTree<label> cons
 		ob[label::gene] = getURI("gene/GN", m.geneId);
 		ob[label::geneSymbol] = refDb->getGeneById(m.geneId).hgncSymbol;
 		ob[label::geneNCBI_id] = refDb->getGeneById(m.geneId).refSeqId;
+	} else if (v.geneId != 0) {
+		ob[label::gene] = getURI("gene/GN", v.geneId);
+		ob[label::geneSymbol] = refDb->getGeneById(v.geneId).hgncSymbol;
+		ob[label::geneNCBI_id] = refDb->getGeneById(v.geneId).refSeqId;
 	}
 	if (! v.proteinHgvsDef.empty()) ob[label::proteinEffect][label::hgvs] = v.proteinHgvsDef;
 	if (! v.proteinHgvsCanonical.empty()) ob[label::proteinEffect][label::hgvsWellDefined] = v.proteinHgvsCanonical;
+	if (! v.maneStatus.empty()) {
+		ob[label::MANE][label::maneStatus] = v.maneStatus;
+		ob[label::MANE][label::maneVersion] = v.maneVersion;
+		ob[label::MANE][label::nucleotide][label::Ensembl][label::hgvs] = v.maneEnsemblNucleotide;
+		ob[label::MANE][label::nucleotide][label::RefSeq][label::hgvs] = v.maneRefSeqNucleotide;
+		ob[label::MANE][label::protein][label::Ensembl][label::hgvs] = v.maneEnsemblProtein;
+		ob[label::MANE][label::protein][label::RefSeq][label::hgvs] = v.maneRefSeqProtein;
+	}
 }
 
 inline void OutputFormatter::Pim::object(jsonBuilder::NodeOfJsonTree<label> const & ob, VariantDetailsProtein const & v)
@@ -464,6 +485,9 @@ std::string OutputFormatter::createOutput(Document const & doc) const
 		DocumentActiveGenomicVariant const & var = doc.asActiveGenomicVariant();
 		out[label::_at_context] = "http://" + pim->carURI + "/schema/allele.jsonld";
 		out[label::_at_id] = (var.caId.isNull()) ? ("_:CA") : (pim->getURI("allele/CA", var.caId.value));
+		for(auto n : var.clingenPreferredTitle) {
+			out[label::communityStandardTitle].push_back(n);
+		}
 		out[label::type] = "nucleotide";
 
 		// external records
@@ -541,6 +565,25 @@ std::string OutputFormatter::createOutput(Document const & doc) const
 		DocumentGene const & gene = doc.gene();
 		out[label::_at_context] = "http://" + pim->carURI + "/schema/gene.jsonld";
 		out[label::_at_id] = pim->getURI("gene/GN", gene.gnId);
+		try {
+			auto regions = refDb->getGeneRegions(gene.hgncSymbol);
+			std::stringstream fullRegion;
+			for (auto kv : regions) {
+				auto names = refDb->getNames(kv.first);
+				if(names.size() > 0) {
+					fullRegion << names[0];
+					for(auto seq : kv.second) {
+						fullRegion << ":" << seq.left() << "-" << seq.right();
+						out[label::locus] = fullRegion.str();
+						break;
+					}
+				}
+				break;
+			}
+		} catch (...) {
+			// if there are errors, ignore
+			// let the rest of the response through
+		}
 		out[label::externalRecords][label::HGNC][label::_at_id] = "http://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id=HGNC:" + boost::lexical_cast<std::string>(gene.gnId);
 		out[label::externalRecords][label::HGNC][label::id    ] = "HGNC:" + boost::lexical_cast<std::string>(gene.gnId);
 		out[label::externalRecords][label::HGNC][label::name  ] = gene.hgncName;
@@ -549,9 +592,22 @@ std::string OutputFormatter::createOutput(Document const & doc) const
 			out[label::externalRecords][label::NCBI][label::_at_id] = "http://www.ncbi.nlm.nih.gov/gene/" + boost::lexical_cast<std::string>(gene.ncbiId);
 			out[label::externalRecords][label::NCBI][label::id    ] = gene.ncbiId;
 		}
-		if(gene.prefRefSeq != "") { 
-			out[label::externalRecords][label::MANEPrefRefSeq][label::_at_id] = "https://www.ncbi.nlm.nih.gov/nuccore/" + boost::lexical_cast<std::string>(gene.prefRefSeq);
-			out[label::externalRecords][label::MANEPrefRefSeq][label::id] = gene.prefRefSeq;
+		if(gene.prefRefSeq != "") {
+			std::multimap<std::string, Mane> mane = refDb->getAllTranscriptsFromHGNCId(gene.gnId);
+			for(auto iter : mane) {
+				out[label::externalRecords][label::MANE].push_back([&](jsonBuilder::NodeOfJsonTree<label> map1){
+					map1[label::maneStatus] = iter.second.maneStatus;
+					map1[label::maneVersion] = refDb->getManeVersion();
+					map1[label::nucleotide][label::Ensembl][label::_at_id] = "https://www.ensembl.org/id/" + boost::lexical_cast<std::string>(iter.second.ensemblNucleotideAccession);
+					map1[label::nucleotide][label::Ensembl][label::id] = iter.second.ensemblNucleotideAccession;
+					map1[label::protein][label::Ensembl][label::_at_id] = "https://www.ensembl.org/id/" + boost::lexical_cast<std::string>(iter.second.ensemblProteinAccession);
+					map1[label::protein][label::Ensembl][label::id] = iter.second.ensemblProteinAccession;
+					map1[label::nucleotide][label::RefSeq][label::_at_id] = "https://www.ncbi.nlm.nih.gov/nuccore/" + boost::lexical_cast<std::string>(iter.second.refSeqNucleotideAccession);
+					map1[label::nucleotide][label::RefSeq][label::id] = iter.second.refSeqNucleotideAccession;
+					map1[label::protein][label::RefSeq][label::_at_id] = "https://www.ncbi.nlm.nih.gov/protein/" + boost::lexical_cast<std::string>(iter.second.refSeqProteinAccession);
+					map1[label::protein][label::RefSeq][label::id] = iter.second.refSeqProteinAccession;
+				});
+			}
 		}
 	} else if (doc.isCoordinateTransform()) {
 		DocumentCoordinates const & coordinates = doc.coordinateTransform();

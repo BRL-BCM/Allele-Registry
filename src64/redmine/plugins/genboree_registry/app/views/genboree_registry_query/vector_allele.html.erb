@@ -1,0 +1,144 @@
+<br>
+<br>
+
+<% @hash_response = JSON.parse(@response_from_registry) %>
+
+<div class="row">
+<!-- When no hits found and error returned -->
+   <% if @hash_response.is_a?(Hash) %>
+      <% logger.error("REGISTRY - Hash is returned from API") %>
+      <div class="col-sm-12">
+         <span><i class="fa fa-exclamation-triangle" aria-hidden="true"></i></span>
+          <% if @hash_response.keys.include?("message") %>
+             <h2> <%= @hash_response["message"] %> </h2>
+          <% end %>
+          <% if @hash_response.keys.include?("description") %>
+             <p> <%= @hash_response["description"] %> </p>
+          <% end %>
+      </div>
+      <% logger.error("REGISTRY - Finished rendering Hash") %>
+   <% end %>
+ 
+   <% if @hash_response.is_a?(Array) and @hash_response.empty?  %>
+      <div class="col-sm-12">
+         <span><i class="fa fa-exclamation-triangle" aria-hidden="true"></i></span>
+        <%= "Unfortunately your search did not return any matches" %>
+      </div>
+   <% end %>
+
+<!-- Any other scenario -->
+   <% if @hash_response.is_a?(Array) and !@hash_response.empty?  %>
+     <table class="table table-condensed">
+       <thead>
+         <tr class="header-row">
+          <th>Chr</th>
+          <th>Mutation (hg38)</th>
+          <th>CAid</th>
+          <th>Gene</th>
+          <th>Transcript</th>
+          <th>Linkouts</th>
+         </tr>
+        </thead>
+        <tbody>
+          <%= raw(generate_table_body(@hash_response)) %>
+        </tbody>
+    </table>
+   <% end %>
+
+ <div class="row">
+    <div class="col-sm-8">
+      <h1></h1>
+      <h2>Number of alleles fetched</h2>
+         <p></p>
+           <ul class="pager">
+             <li class="previous">
+               <a id="previous-page">
+                   Previous
+               </a>
+             </li>
+             <li class="next">
+               <a id="next-page">
+                   Next
+               </a>
+             </li>
+          </ul>
+         <p></p>
+    </div>
+    <div class="col-sm-4">
+    </div>
+   </div>
+</div>
+
+<style>
+.vector-h5 {
+  font-style: italic;
+  font-weight: 500;
+}
+.vector-panel {
+  background-color: #fff;
+  border: 0px solid black;
+}
+.vector-heading {
+  background-color: #fff;
+  font-size: 1.5em;
+  border-bottom: 1px solid black;
+  font-style: italic;
+  padding: 0px;
+  font-weight: 600;
+}
+.gene {
+  font-size: 0.6em;
+}
+.panel {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+p {
+  font-weight: 200;
+  color: grey;
+}
+.label-jsonld {
+  background: #00d2e5;
+  border-radius: 1em;
+  font-style: normal;
+  font-size: 0.7em;
+  font-weight: 700;
+}
+.add-padding-top {
+  padding-top: 0.5em;
+}
+.hide-me {
+    display: none;
+}
+.transcript-cdot, .aa-pdot {
+ font-size: 0.9em;
+}
+.canonical-allele {
+ font-weight: 600;
+ font-style: italic;
+}
+.transcript-cdot, .grch38-gdot, .aa-pdot {
+  word-break: break-all
+}
+.label-clinvar {
+  background-color: goldenrod;
+}
+.label-exac {
+  background: cornflowerblue;
+}
+.label-gnomad {
+  background: coral;
+}
+.label-allelic {
+  background: #777777;
+}
+.label-cosmic {
+  background: #777777;
+}
+.label-dbsnp {
+  background: palevioletred;
+}
+.linkout-column {
+  width: 20%;
+}
+</style>

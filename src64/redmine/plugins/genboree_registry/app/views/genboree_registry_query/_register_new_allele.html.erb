@@ -1,0 +1,55 @@
+<div class="row new-caid-header">
+  <div class="col-sm-12">
+    <% if @regRequired %>
+      <small id="not-present-note">This allele is not present in the registry. To get a canonical identifier, please click on the "Get identifier" below.</small><br>
+    <% end %>
+  </div>
+  <div class="col-sm-8">
+    <div class="show-caid">
+      Canonical Allele Identifier:
+      <% if @regRequired %>
+        <%==@regLink%>
+      <% end %>
+      <% if @showGeneInfo %>
+        <% caid = uri_to_caid @hash_response["@id"] %>
+        <b><%= caid if ! caid.to_s.include?("Get") %></b>
+      <% end %>
+      <% if @regRequired %>
+        Get Identifier<span class="fa fa-star-o"></span></a><br>
+      <% end %>
+    </div>
+    <% logger.error("REGISTRY - After basic checks") %>
+    <% if(@showGeneInfo) %>
+      <div class="show-gene">
+        Gene:
+        <% gene_information = parse_gene_links (get_gene @hash_response) %>
+        <% gene2preferredRefseq = find_preferred_transcripts gene_information %>
+        <% gene_information.each do |gene| %>
+          <% if gene.keys.include?("symbol")%>
+            <%= gene["symbol"]  %>
+            <% if gene.keys.include?("hgnc") %>
+                  <span class="verysmall label">
+                    <a class="extlink" href=<%=gene["hgnc"]%> target="_blank">
+                      HGNC
+                    </a>
+                  </span>
+            <% end %>
+            <% if gene.keys.include?("ncbi") %>
+                  <span class="verysmall label">
+                    <a class="extlink" href=<%=gene["ncbi"]%> target="_blank">
+                      NCBI
+                    </a>
+                  </span>
+            <% end %>
+          <% end %>
+          <br>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div> <!-- End row -->
+<style type="text/css">
+  .hide-me {
+    display: none;
+  }
+</style>

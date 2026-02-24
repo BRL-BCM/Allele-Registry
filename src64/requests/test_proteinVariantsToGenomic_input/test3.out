@@ -1,0 +1,15 @@
+Error for the following:
+Expected: ([12,17),STMSR,RCPRC) => [[([48,52),TACT,),([59,59),,AGAT)]]
+Found   : ([12,17),STMSR,RCPRC) => [[([48,52),TACT,),([58,59),C,A),([59,59),,AGAT)],[([48,52),TACT,),([59,59),,AGAT)]]
+Error for the following:
+Expected: ([12,18),STMSRT,RCPVP) => [[([48,52),TACT,),([61,62),A,GC)]]
+Found   : ([12,18),STMSRT,RCPVP) => [[([48,52),TACT,),([58,59),C,A),([61,62),A,GC)],[([48,52),TACT,),([61,62),A,GC)]]
+Error for the following:
+Expected: ([14,17),MSR,ICRC) => [[([54,55),G,T),([56,58),CC,G),([59,59),,AGAT)]]
+Found   : ([14,17),MSR,ICRC) => [[([54,55),G,T),([56,58),CC,G),([59,59),,AGAT)],[([54,55),G,T),([56,59),CCC,GT),([59,59),,AGAT)]]
+Error for the following:
+Expected: ([15,17),SR,CRC) => [[([56,58),CC,G),([59,59),,AGAT)]]
+Found   : ([15,17),SR,CRC) => [[([56,58),CC,G),([59,59),,AGAT)],[([56,59),CCC,GT),([59,59),,AGAT)]]
+Error for the following:
+Expected: ([15,19),SRTG,CRCVDR) => [[([56,58),CC,G),([59,59),,AGAT),([61,64),ACC,GT)]]
+Found   : ([15,19),SRTG,CRCVDR) => [[([56,58),CC,G),([59,59),,AGAT),([61,64),ACC,GT)],[([56,59),CCC,GT),([59,59),,AGAT),([61,64),ACC,GT)]]

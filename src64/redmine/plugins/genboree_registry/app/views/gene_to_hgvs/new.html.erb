@@ -1,0 +1,83 @@
+<div class="row">
+ <!-- div class="col-sm-12 alert alert-warning">
+    <strong><u>Note</u></strong>: Currently, ClinGen Allele Registry only supports Gene symbol and c./p.  queries for <strong>coding</strong> <i>(e.g. Gene: STK11, Type=c., Position: 26 Reference Allele: T Alternate Allele: C)</i>, <strong>intronic</strong> <i>(e.g. Gene: STK11, Type:c., Position:374+1, Reference Allele:A, and Alternate Allele:G)</i>, and, <strong>upstream</strong> <i>(Gene:STK11, Type:c., Position:-723, Reference Allele: G Alternate Allele: T)</i> <strong>substitutions</strong>. We are actively developing support for such queries for other types of variations.
+ </div -->
+</div>
+<br>
+<h2>
+  Search registry with fuzzy queries 
+</h2>
+<br>
+<div class="row">
+<%= form_tag({},{:method => :post}) do %>
+ <div class="col-sm-2">
+  <%= label_tag :gene, "Gene symbol" %>
+  <%= text_field_tag :gene, @gene_query[:gene], {:class => "form-control"}  %>
+ </div>
+ <div class="col-sm-3">
+  <%= label_tag :type, "Transcript (c.) or Amino-acid (p.)" %>
+  <%= select_tag :type, options_for_select(["Select one","c.","p."], "selected" => "Select one", "disabled" => "Select one"), {"class" => "form-control"}%>
+  <!-- small>Currently only c. queries are supported</small -->
+ </div>
+ <div class="col-sm-2">
+  <%= label_tag :position, "Position" %>
+  <%= text_field_tag :position, @gene_query[:position], {"class" => "form-control"}%>
+ </div>
+ <div class="col-sm-2">
+  <%= label_tag :reference, "Reference allele" %>
+  <%= select_tag :reference, options_for_select(["Select one","A","C","G","T"],"selected" => "Select one", "disabled" => "Select one") , { "class" => "form-control"}%>
+ </div>
+ <div class="col-sm-2">
+  <%= label_tag :alternate, "Alternate allele" %>
+  <%= select_tag :alternate, options_for_select(["Select one","A","C","G","T"],"selected" => "Select one", "disabled" => "Select one") , { "class" => "form-control"}%>
+ </div>
+ </div>
+ <br>
+ <br>
+ <div class="row">
+ <div class="col-sm-1">
+  <%= submit_tag "Query" , {"id" => "fuzzy-query" , "class" => "btn btn-primary disabled"} %>
+ </div>
+ <div class="col-sm-3">
+  <a href="gene_indel" class="btn btn-primary" role="button" aria-pressed="true">Switch to Indels</a>
+ </div>
+ </div>
+<% end %>
+</div>
+<style>
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+</style>
+<script>
+
+
+  $('#type').change(function(){
+    var type = $('#type').val();
+    var reference = $('#reference');
+    var alternate = $('#alternate')
+    if(type == "c."){
+       reference.html('<option selected disabled>Select one</option><option value="A">A</option><option value="C">C</option><option value="G">G</option><option value="T">T</option>');
+       alternate.html('<option selected disabled>Select one</option><option value="A">A</option><option value="C">C</option><option value="G">G</option><option value="T">T</option>');
+    }
+
+    if(type == "p."){
+       reference.html('<option selected disabled>Select one</option><option value="Ala">Ala</option><option value="Arg">Arg</option><option value="Asn">Asn</option><option value="Asp">Asp</option><option value="Cys">Cys</option><option value="Gln">Gln</option><option value="Glu">Glu</option><option value="Gly">Gly</option><option value="His">His</option><option value="Ile">Ile</option><option value="Leu">Leu</option><option value="Lys">Lys</option><option value="Met">Met</option><option value="Phe">Phe</option><option value="Pro">Pro</option><option value="Ser">Ser</option><option value="Thr">Thr</option><option value="Trp">Trp</option><option value="Tyr">Tyr</option><option value="Val">Val</option>');
+       alternate.html('<option selected disabled>Select one</option><option value="Ala">Ala</option><option value="Arg">Arg</option><option value="Asn">Asn</option><option value="Asp">Asp</option><option value="Cys">Cys</option><option value="Gln">Gln</option><option value="Glu">Glu</option><option value="Gly">Gly</option><option value="His">His</option><option value="Ile">Ile</option><option value="Leu">Leu</option><option value="Lys">Lys</option><option value="Met">Met</option><option value="Phe">Phe</option><option value="Pro">Pro</option><option value="Ser">Ser</option><option value="Thr">Thr</option><option value="Trp">Trp</option><option value="Tyr">Tyr</option><option value="Val">Val</option><option value="Ter">Ter</option>');
+    }
+  });
+
+  $('#reference, #alternate, #gene, #position, #type').on('keyup keypress blur change', function(){
+     if($('#reference').val() != null && $('#alternate').val() != null && $('#gene').val() != null && $('#gene').val() != "" && $('#type').val() != null && $('#position').val() != null && $('#position').val() != ""){
+        $('#fuzzy-query').removeClass('disabled');
+     }
+     else {
+        $('#fuzzy-query').addClass('disabled');
+     }
+  });
+</script>

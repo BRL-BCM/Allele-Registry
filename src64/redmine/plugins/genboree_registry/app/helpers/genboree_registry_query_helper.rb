@@ -1,0 +1,2 @@
+module GenboreeRegistryQueryHelper
+end

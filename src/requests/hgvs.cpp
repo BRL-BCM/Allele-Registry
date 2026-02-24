@@ -741,7 +741,7 @@ static std::string toHgvsPosition( ReferencesDatabase const* refDb, ReferenceId 
 {
 	std::string s;
 	if (refDb->isSplicedRefSeq(refId)) {
-		SplicedRegionCoordinates region = refDb->convertToSplicedRegion(refId, RegionCoordinates(unsplicedHgvsPosition-1,unsplicedHgvsPosition));
+		SplicedRegionCoordinates region = refDb->convertToSplicedRegion(refId, RegionCoordinates((unsplicedHgvsPosition==0)?0:unsplicedHgvsPosition-1,unsplicedHgvsPosition));
 		unsigned splicedPos = region.right().position();
 		if (region.right().hasNegativeOffset()) ++splicedPos; // for HFVS position we have to move to bp after intron
 		RegionCoordinates cds = refDb->getCDS(refId);
@@ -776,7 +776,7 @@ std::string toHgvsProteinPosition( char aa, unsigned position )
 	return s;
 }
 
-std::string toHgvsModifications( ReferencesDatabase const* refDb, NormalizedGenomicVariant const & var )
+std::string toHgvsModifications( ReferencesDatabase const* refDb, NormalizedGenomicVariant const & var, alignment pAlignment )
 {
 	std::vector<std::string> haplotype;
 	for (NormalizedSequenceModification const & m: var.modifications) {
@@ -787,7 +787,7 @@ std::string toHgvsModifications( ReferencesDatabase const* refDb, NormalizedGeno
 			result += "dup";
 			// TODO - repetitions & inversions
 		} else {
-			PlainSequenceModification p = m.rightAligned();
+			PlainSequenceModification p = m.align(pAlignment, refDb, var.refId);
 			if (p.originalSequence.size() == 1 && p.newSequence.size() == 1) {
 				// SNV
 				result += toHgvsPosition( refDb, var.refId, p.region.right() );
@@ -872,12 +872,12 @@ std::string toHgvsModification( ReferencesDatabase const* refDb, ReferenceId con
 	return result;
 }
 
-std::string toHgvsModifications( ReferencesDatabase const* refDb, NormalizedProteinVariant const & var )
+std::string toHgvsModifications( ReferencesDatabase const* refDb, NormalizedProteinVariant const & var, alignment pAlignment )
 {
 	// protein
 	std::vector<std::string> haplotype;
 	for (NormalizedSequenceModification const & m: var.modifications) {
-		PlainSequenceModification p = m.rightAligned();
+		PlainSequenceModification p = m.align(pAlignment, refDb, var.refId);
 		std::string result = "";
 		if (m.category == variantCategory::duplication && m.region.length() >= m.lengthChange) {
 			result += toHgvsProteinPosition( p.newSequence.front(), m.region.right()-m.lengthChange+1 );

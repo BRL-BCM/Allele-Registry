@@ -42,6 +42,7 @@ REQUESTS+=RequestSequenceServiceInfo
 REQUESTS+=RequestSequenceByDigest
 REQUESTS+=RequestVrAlleleForHgvs
 REQUESTS+=RequestMetadataForSequenceByDigest
+REQUESTS+=RequestGeneIntersection
 
 	
 libRequests.a: $(REQUESTS:=.o) OutputFormatter.o parsers.o identifiersTools.o proteins.o proteinVariantsToGenomic.o smithWaterman.o canonicalization.o hgvs.o coordinateTransformationHelper.o

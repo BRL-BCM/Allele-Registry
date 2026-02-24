@@ -63,7 +63,7 @@
 		pim->callbackCreateRecord = funcLoadData;
 		pim->storage = new flatDb::StorageWithCache(dbFile, 256*1024, cacheSizeInMegabytes);  // page size = 256 KB
 		pim->newDatabaseWasCreated = (pim->storage->numberOfPages() == 0);
-		pim->scheduler = new flatDb::SchedulerT<tKey>( globalKeySize, 8, cpuTaskManager, ioTaskManager, pim->storage, pim->callbackCreateRecord ); // index page size = 2 MB
+		pim->scheduler = new flatDb::SchedulerT<tKey>( globalKeySize, 16, cpuTaskManager, ioTaskManager, pim->storage, pim->callbackCreateRecord ); // index page size = 2 MB
 	}
 
 

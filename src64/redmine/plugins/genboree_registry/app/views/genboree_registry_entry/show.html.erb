@@ -1,0 +1,51 @@
+<div class="container">
+  <div class="row">
+  <h2>Summary of registered alleles:</h2>
+  </div>
+  <div class="row" style="width:80%;margin:auto">
+  <div class="col-sm-12">
+   <table class="table">
+   <% @local_hash = JSON.parse(@response_from_registry) %>
+   <% split_content = @contents.split("\n") %>
+   <% total_entries = split_content.length %>
+   <% total_in_response = @local_hash.length %>
+   <% if total_entries == total_in_response %>
+   <thead>
+      <tr>
+         <th>
+           Supplied HGVS expression
+         </th>
+         <th>
+           CAid
+         </th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <%    (0...total_in_response).each do |counter|  %>
+         <td>
+             <%= split_content[counter] %>
+         </td>
+             <% if @local_hash[counter].keys.include?("@id")  %>
+                <td>
+                  <a href=<%= "/redmine/projects/#{@project.identifier}/genboree_registry/by_caid?caid=#{@local_hash[counter]["@id"].match(/CA[0-9]+/)}"%> >
+                    <%= @local_hash[counter]["@id"].match(/CA[0-9]+/) %>
+                  </a>
+                </td>
+             <% else %>
+                <td>
+                  <%= @local_hash[counter]["message"]%></td>
+             <% end %>
+      </tr>
+     <% end %>
+     <% end %>
+    </tbody>
+   </table>
+   </div>
+</div>
+
+<style>
+.hide-me {
+    display: none;
+}
+</style>

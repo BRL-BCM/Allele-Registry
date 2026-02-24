@@ -1,0 +1,7 @@
+<h1> In post_file view </h1>
+<%= "Does ERB work? 1" %>
+<% "Does ERB work? 2 " %>
+<%= puts "Does ERB work? 3" %>
+<% puts "Does ERB work? 4" %>
+<%= "#{@response_from_registry.inspect}" %>
+<h1> Finished with response from registry </h1>

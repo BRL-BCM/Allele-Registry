@@ -1,0 +1,46 @@
+<% if @transcripts_response == "[ ]" %>
+  <!-- div class="container" -->
+   <div class="row">
+     <div class="col-sm-12 danger">
+	<h4> We did not find any sequences for provided gene
+	     If you believe that this gene has reference sequences 
+	     please contact us using the information provided on the 
+	     Registry Home Page
+	</h4>
+     </div>
+   </div>
+  <!-- /div -->
+<% else %>
+  <!-- div class="container" -->
+    <div class="row">
+      <div class="well">
+       <h2>Available transcripts for <i> <%= @queried_gene %> </i> </h2>
+       <% JSON.parse(@transcripts_response).each do |i| %>
+	 <% if i["type"] == "transcript" %>
+           <div class="row transcript-table">
+		<div class="col-sm-6 text-right">
+		<% i["externalRecords"].each do |key,value| %>
+		  <a href=<%=value['@id']%> target="_blank"><%=value["id"]%>
+		    <span class="fa fa-external-link"></span>
+		  </a>
+		<%  end %>
+                </div>
+                <div class="col-sm-6">
+                  <a href= 'generate_hgvs?<%="transcript=#{i["externalRecords"]["NCBI"]["id"] rescue i["externalRecords"]["Ensembl"]["id"] rescue i["externalRecords"]["LRG"]["id"] }&gene=#{@queried_gene}&local=#{i["@id"].split("/").last}"%>' class="btn btn-sm btn-primary">Generate HGVS using this transcript</a>
+                </div>
+           </div>
+	 <% end %>
+       <% end %>
+      </div>
+    </div>
+  <!-- /div -->
+<% end %>
+<style>
+.transcript-table {
+    margin: 10px;
+    padding: 5px;
+}
+.hide-me {
+    display: none;
+}
+</style>

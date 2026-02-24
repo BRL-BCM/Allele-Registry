@@ -1,9 +1,11 @@
 #include "textLabels.hpp"
 #include <map>
 #include <vector>
+#include <mutex>
 
 namespace {
 //	std::vector<std::string> label2string(128,"__unknownField__");  // TODO - hardcoded size
+	std::mutex labelsMutex;
 	std::map<std::string,label> string2label;
 	std::array<std::string,256> textLabels;
 	bool textLabelInitialized = false;
@@ -13,6 +15,8 @@ namespace {
 	void initTextLabels() {
 		textLabels[static_cast<unsigned>(label::_at_context)] = "@context"; string2label["@context"] = label::_at_context;
 		textLabels[static_cast<unsigned>(label::_at_id     )] = "@id"     ; string2label["@id"     ] = label::_at_id     ;
+		LABEL_STRING_CONVERSION(locus)
+		LABEL_STRING_CONVERSION(communityStandardTitle)
 		LABEL_STRING_CONVERSION(__unknownField__)
 		LABEL_STRING_CONVERSION(active)
 		LABEL_STRING_CONVERSION(actualAllele)
@@ -81,7 +85,12 @@ namespace {
 		LABEL_STRING_CONVERSION(type)
 		LABEL_STRING_CONVERSION(variant)
 		LABEL_STRING_CONVERSION(variationId)
-		LABEL_STRING_CONVERSION(MANEPrefRefSeq)
+		LABEL_STRING_CONVERSION(MANE)
+		LABEL_STRING_CONVERSION(RefSeq)
+		LABEL_STRING_CONVERSION(maneVersion)
+		LABEL_STRING_CONVERSION(maneStatus)
+		LABEL_STRING_CONVERSION(nucleotide)
+		LABEL_STRING_CONVERSION(protein)
 		LABEL_STRING_CONVERSION(transformations)
 		LABEL_STRING_CONVERSION(service)
 		LABEL_STRING_CONVERSION(algorithms)
@@ -99,6 +108,7 @@ namespace {
 
 label toLabel(std::string const & s)
 {
+	std::lock_guard<std::mutex> guard(labelsMutex);
 	if (! textLabelInitialized) {
 		initTextLabels();
 		textLabelInitialized = true;
@@ -114,6 +124,7 @@ label toLabel(std::string const & s)
 
 std::array<std::string,256> getTextLabels()
 {
+	std::lock_guard<std::mutex> guard(labelsMutex);
 	if (! textLabelInitialized) {
 		initTextLabels();
 		textLabelInitialized = true;

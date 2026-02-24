@@ -1,0 +1,80 @@
+<div class="modal-header">
+  <h3>Information about searches supported by the allele registry
+     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+       <span aria-hidden="true">&times;</span> </h3>
+     </button>
+</div>
+<div class="modal-body">
+<table class="table">
+      <tr>
+       <th>Type of search</th>
+       <th>Examples</th>
+       <th>Information</th>
+      </tr>
+      <tr>
+       <td>HGVS</td>
+       <td>NM_002496.3:c.64C&gt;T</td>
+       <td class="left-align">Search the allele registry using HGVS expression. The allele registry supports search using HGVS expressions for a wide variety of transcripts, genomic and protein sequences (from NCBI/EBI/LRG). The HGVS expression is a widely used a to describe a variant. More information about HGVS expressions is  provided <a target="_blank" href="http://varnomen.hgvs.org/">here <span class="fa fa-external-link"></span></a></td>
+      </tr>
+      <tr>
+        <td>Descriptor (CNV)</td>
+        <td>GRCh38 9q34.3(chr9:137346021_137375754-137715843_137719108)x3</td>
+        <td class="left-align">A descriptor is a representation of CNV that is derived from ClinVar preferred name. The derivation is to handle broader usecases, especially to handle imprecise start and end points. </td>
+      </tr>
+      <tr>
+       <td>CAid</td>
+       <td>CA321211</td>
+       <td class="left-align">Search the allele registry using Canonical Allele Identifiers. The Canonical Allele Identifiers are provided by the allele registry. A canonical allele identifier describes multiple equivalent representations of a given allele. The concept of Canonical Allele is described <a target="_blank" href="http://datamodel.clinicalgenome.org/allele/master/conceptual/canonical_allele/">here <span class="fa fa-external-link"></span></a> by the ClinGen data model working group. </td>
+      </tr>
+     <tr>
+      <td>CNVid</td>
+      <td>CNV326675390</td>
+      <td class="left-align">Search the allele registry using Canonical Allele Identifiers for copy number gain and loss. The Canonical Allele Identifiers are provided by the allele registry for copy number variations. See CAid based search for details. </td>
+      </tr>
+      <tr>
+       <td>ClinVar Variation Id</td>
+       <td>214835</td>
+       <td class="left-align">The ClinVar Variation ID is provided by ClinVar. The Variation ID is a unique identifier for the set of sequence changes that were interpreted (by ClinVar). More information about ClinVar Variation Id is provided <a href="https://www.ncbi.nlm.nih.gov/clinvar/docs/variation_report/" target="_blank">here <span class="fa fa-external-link"></span></a>. </td>
+      </tr>
+      <tr>
+       <td>ClinVar RCV Id</td>
+       <td>RCV000196794</td>
+       <td class="left-align">The ClinVar RCV ID is provided by ClinVar as an accession number that describes a ClinVar submission. For more details visit <a href="https://www.ncbi.nlm.nih.gov/clinvar/docs/help/" target="_blank">here <span class="fa fa-external-link"></span></a></td>
+      </tr>
+      <tr>
+       <td>dbSNP Id</td>
+       <td>369602258</td>
+       <td class="left-align">Search the allele registry using dbSNP rs-Identifier. The rs identifier is an identifier for a location and type of variation. More information about dbSNP is available <a href="https://www.ncbi.nlm.nih.gov/projects/SNP/" target="_blank">here <span class="fa fa-external-link"></span></a></td>
+      </tr>
+      <tr>
+       <td>ExAC Id</td>
+       <td>5-112043382-A-G</td>
+       <td class="left-align">Search the allele registry using ExAC Identifier. The ExAC identifier for an allele is a simple representation of allele using hg19/GRCh37 reference sequence. The identifier is a concatenated string that describes chromosome, coordinate, reference, and alternate alleles (Chr-Start-Ref-Alt) with "-" delimiter. Please visit <a href="http://exac.broadinstitute.org/faq" target="_blank">here<span class="fa fa-external-link"></span></a> for details. </td>
+      </tr>
+      <tr>
+       <td>gnomAD Id</td>
+       <td>5-112043382-A-G</td>
+       <td class="left-align">Search the allele registry using gnomAD Identifier. The gnomAD identifier for an allele is a simple representation of allele using hg19/GRCh37 reference sequence. The identifier is a concatenated string that describes chromosome, coordinate, reference, and alternate alleles (Chr-Start-Ref-Alt) with "-" delimiter. Please visit <a href="http://gnomad.broadinstitute.org/faq" target="_blank">here<span class="fa fa-external-link"></span></a> for details. </td>
+      </tr>
+      <tr>
+       <td>MyVariant Id (hg19)</td>
+       <td>chr9:g.107620835G>A</td>
+       <td class="left-align">Search the allele registry using MyVariant Identifier. MyVariant identifier for an allele is a simple representation of allele using hg19/GRCh37 reference sequence. The identifier is a variation of HGVS representation to describe variation. Instead of the reference sequence, the identifier uses chromosome name. Please visit <a href="http://docs.myvariant.info/en/latest/" target="_blank">here<span class="fa fa-external-link"></span></a> for details. </td>
+      </tr>
+      <tr>
+       <td>Any Identifier</td>
+       <td>369602258</td>
+       <td class="left-align">Search the allele registry using any of the identifiers: CAid, CNVid, ClinVar RCV and Variation Id, dbSNP Id. </td>
+      </tr>
+      <tr>
+       <td>HGNC Gene Symbol</td>
+       <td>TP53</td>
+       <td class="left-align">Search the allele registry using HGNC approved gene symbols. For details of HGNC approved gene symbol visit <a href="https://www.genenames.org/" target="_blank">here <span class="fa fa-external-link"></span></a></td> 
+      </tr>
+      <tr>
+       <td>Reference sequence and position</td>
+       <td>NM_000546.5 , 1 , 300 </td>
+       <td class="left-align"> This search option requires more than one parameter. The first parameter is the reference sequence, the second is the start position and the third is the end position. This search will return alleles that start within the region on a reference sequence. This option may be helpful when searching for non-coding alleles within a region on a chromosome reference sequence. </td>
+      </tr>
+ </table>
+</div>

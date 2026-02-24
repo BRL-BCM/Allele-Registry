@@ -42,6 +42,7 @@ private:
 protected:
 	// flag - signalization of request termination
 	std::atomic<bool> killThread;
+	alignment fAlignment = alignment::rightAligned;
 	// global stuff
 	static ReferencesDatabase const * referencesDb;
 	static AllelesDatabase * allelesDb;
@@ -63,8 +64,8 @@ protected:
 	Request(documentType docType) : killThread(false), outputBuilder(docType) {}
 public:
 	// methods used in derived class
-	void fillVariantsDetails(std::vector<Document> & docs) const;    // TODO - should be protected or static
-	void mapVariantsToMainGenome(std::vector<Document> & docs) const;// TODO - should be protected or static
+	void fillVariantsDetails(std::vector<Document> & docs, alignment pAlignment = alignment::leftAligned) const;    // TODO - should be protected or static
+	void mapVariantsToMainGenome(std::vector<Document> & docs, alignment pAlignment = alignment::leftAligned) const;// TODO - should be protected or static
 	// this must be called once at the beginning of application
 	static void initGlobalVariables(Configuration const & conf);
 	// call this method to start request processing (it starts processing in separate thread and returns)
@@ -86,7 +87,29 @@ public:
 	std::string logMethod;
 	std::string logLogin;
 	std::string logRequest;
+public:
+	Request* setAlignment(alignment const & pAlignment) {
+		this->fAlignment = pAlignment;
+		return this;
+	}
+
 };
+
+
+class RequestGeneIntersection : public Request
+{
+private:
+	ReferenceId refId;
+	std::string name;
+	uint32_t coordStart;
+	uint32_t coordEnd;
+protected:
+	virtual void process();
+public:
+	RequestGeneIntersection(std::string const & qParam);
+	virtual ~RequestGeneIntersection();
+};
+
 
 
 class RequestFetchAllelesByDefinition : public Request
@@ -135,10 +158,13 @@ private:
 	ResultSubset fRange;
 	ReferenceId fRefId;
 	RegionCoordinates fRegion;
+	std::string fChr;
+	std::string fRefGenome;
+	alignment fAlignment;
 protected:
 	virtual void process();
 public:
-	RequestQueryAllelesByRegion(ResultSubset const & rs, std::string const & refId, unsigned from = 0, unsigned to = std::numeric_limits<unsigned>::max());
+	RequestQueryAllelesByRegion(ResultSubset const & rs, std::string const & ref, std::string const & pRefGenome = "", unsigned from = 0, unsigned to = std::numeric_limits<unsigned>::max(), std::string const fAlignment = "left");
 	virtual ~RequestQueryAllelesByRegion();
 };
 
@@ -162,10 +188,11 @@ class RequestQueryAllelesByGene : public Request
 private:
 	ResultSubset fRange;
 	std::string fGeneName;
+	unsigned fMaxChunkSize;
 protected:
 	virtual void process();
 public:
-	RequestQueryAllelesByGene(ResultSubset const & rs, std::string const & geneName) : Request(documentType::activeGenomicVariant), fRange(rs), fGeneName(geneName) {}
+	RequestQueryAllelesByGene(ResultSubset const & rs, std::string const & geneName, unsigned const maxChunkSize) : Request(documentType::activeGenomicVariant), fRange(rs), fGeneName(geneName), fMaxChunkSize(maxChunkSize) {}
 	virtual ~RequestQueryAllelesByGene();
 };
 
@@ -216,12 +243,13 @@ public:
 class RequestFetchReference : public Request
 {
 private:
-	unsigned fRsId = 0;
+	ReferenceId fRefId;
+	std::string fRefBuild;
 	bool fDetails = false;
 protected:
 	virtual void process();
 public:
-	RequestFetchReference(std::string const & id, bool details = false);
+	RequestFetchReference(std::string const & ref, std::string const & pRefBuild = "", bool details = false);
 	virtual ~RequestFetchReference();
 };
 

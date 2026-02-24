@@ -10,6 +10,7 @@
 #include <sys/file.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "../commonTools/bytesLevel.hpp"
 
 namespace flatDb {
 
@@ -17,6 +18,7 @@ namespace flatDb {
 	{
 		std::string path;
 		int file = 0;
+		int indexFile = 0;
 		unsigned pagesCount = 0;
 		std::map<unsigned,unsigned> freePages;       // page->id => number of pages
 		std::map<unsigned,std::list<unsigned>> freePagesBySize; // number of pages => pageId
@@ -63,12 +65,51 @@ namespace flatDb {
 			close(pim->file);
 			pim->throw_error("The size of the file is not a multiplication of the page size.");
 		}
+		std::string indexFileName = path + ".index";
+		pim->indexFile = open(indexFileName.c_str(), flags, S_IRUSR | S_IWUSR);
+		if (pim->indexFile < 0) {
+			int errnum = errno;
+			pim->throw_error("Cannot open the index file. Error returned by open(): ", errnum);
+		}
+		struct stat bufIndex;
+		if (fstat(pim->indexFile,&bufIndex) != 0) {
+			int errnum = errno;
+			close(pim->indexFile);
+			pim->throw_error("Cannot check the size of the index file. Error returned by fstat(): ", errnum);
+		}
+		if (flock(pim->indexFile, LOCK_EX | LOCK_NB ) != 0) {
+			int errnum = errno;
+			close(pim->indexFile);
+			pim->throw_error("Cannot lock the index file. Error returned by flock(): ", errnum);
+		}
+		off_t index_file_size = bufIndex.st_size;
+		if (index_file_size == 0) 
+		{
+			unsigned char * dat = new unsigned char[2L*8*pageSize];
+			memset(dat, 0, 2L*8*pageSize);
+			pread(pim->file, dat, 8*pageSize, 0);
+			pwrite(pim->indexFile, dat, 2L*8*pageSize, 0);
+			memset(dat, 0, 2L*8*pageSize);
+			pread(pim->file, dat, 8*pageSize, 8*pageSize);
+			pwrite(pim->indexFile, dat, 2L*8*pageSize, 2L*8*pageSize);
+			delete [] dat;
+			// unsigned char * buf = new unsigned char[pageSize];
+			// uint64_t in_offset = 2L*8*pageSize;
+			// uint64_t out_offset = 4L*8*pageSize;
+			// while(pread(pim->file, buf, pageSize, in_offset)) {
+			// 	pwrite(pim->indexFile, buf, pageSize, out_offset);
+			// 	in_offset+=pageSize;
+			// 	out_offset+=pageSize;
+			// }
+			// delete [] buf;
+		}
 		scopedPtr.release();
 	}
 
 
 	FileWithPages::~FileWithPages()
 	{
+		close(pim->indexFile);
 		close(pim->file);
 		delete pim;
 	}
@@ -158,6 +199,34 @@ namespace flatDb {
 		}
 		pim->freePages[pageId] = numberOfPages;
 		pim->freePagesBySize[numberOfPages].push_front(pageId);
+	}
+
+
+	void FileWithPages::writeIndexPages(unsigned pageId, unsigned pagesCount, void const * buf)
+	{
+		uint64_t const pageSize64 = static_cast<int64_t>(pageSize);
+		uint64_t offsetBegin = pageId*pageSize64;
+		uint64_t const offsetEnd = offsetBegin + pagesCount*pageSize64;
+		while (offsetBegin < offsetEnd) {
+			ssize_t const result = pwrite(pim->indexFile, buf, offsetEnd-offsetBegin, offsetBegin);
+			if ( result < 0 ) pim->throw_error("Cannot write to the file: ", errno);
+			offsetBegin += result;
+			buf = static_cast<uint8_t const *>(buf) + result;
+		}
+	}
+
+
+	void FileWithPages::readIndexPages(unsigned pageId, unsigned pagesCount, void * buf)
+	{
+		uint64_t const pageSize64 = static_cast<int64_t>(pageSize);
+		uint64_t offsetBegin = pageId*pageSize64;
+		uint64_t const offsetEnd = offsetBegin + pagesCount*pageSize64;
+		while (offsetBegin < offsetEnd) {
+			ssize_t const result = pread(pim->indexFile, buf, offsetEnd-offsetBegin, offsetBegin);
+			if ( result < 0 ) pim->throw_error("Cannot read() on the file: ", errno);
+			offsetBegin += result;
+			buf = static_cast<uint8_t*>(buf) + result;
+		}
 	}
 
 

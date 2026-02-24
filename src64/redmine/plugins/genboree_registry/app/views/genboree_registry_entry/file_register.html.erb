@@ -1,0 +1,75 @@
+<div class="container">
+<div class="row">
+<div class="col-sm-12">
+<div class="panel">
+    <div class="panel-heading">
+      <h2 class="section-header">Bulk registration services</h2>
+    </div>
+    <div class="panel-body">
+      <%= form_tag( {:controller => :genboree_registry_entry, 
+      		:action => :post_file , 
+      		:method => :post } , 
+      		{ :multipart => true} ) do %>
+      <p>
+      Please upload file containing HGVS expressions. 
+      <br>
+      <br>
+            <div class="input-group">
+                <label class="input-group-btn">
+                    <span class="btn btn-primary">
+                        Browse… <input id="allele_file" name="allele_file" type="file">
+                    </span>
+                </label>
+                <input id="blankbox" class="form-control btn form-radius" readonly="" type="text"></input>
+            </div>
+      <br>
+       <%= submit_tag 'Register', :class => "btn btn-primary" %>
+      </p>
+      <% end %>
+    </div>
+   </div>
+ </div>
+</div>
+
+<style>
+.btn-file {
+    position: relative;
+    overflow: hidden;
+}
+
+input[type=file] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 16px;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    outline: none;
+    background: white;
+    cursor: inherit;
+    display: block;
+}
+.form-radius {
+    border-radius: 20px;
+    height: 38px;
+}
+
+#blankbox {
+    height: 36px;
+    border-radius: 3px;
+}
+.hide-me {
+    display: none;
+}
+</style>
+
+<script>
+    $(document).on('change', ':file', function() {
+        console.log("File uploaded")
+        var input = $(this)
+        document.getElementById('blankbox').value =  input.val();
+    });
+</script>

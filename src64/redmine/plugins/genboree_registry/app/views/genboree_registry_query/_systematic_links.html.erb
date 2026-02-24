@@ -1,0 +1,12 @@
+<div class="row systematic-links">
+  <% if !@regRequired %>
+    <div class="col-sm-6">
+      <%==@calcLink%>
+    </div>
+    <div class="col-sm-6">
+      <a href=/allele/<%=caid%>>
+        <span class="extlink-resource"><%="JSON-LD"%><span class="fa fa-file-text-o"></span></span>
+      </a>
+    </div>
+  <% end %>
+</div> <!-- End row -->

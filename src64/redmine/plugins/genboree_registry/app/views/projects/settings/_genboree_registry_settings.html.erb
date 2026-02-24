@@ -1,0 +1,79 @@
+  <h3><%#= l(:gbregistry_label_edit_settings) %></h3>
+
+ <%# Seed the variables %>
+  <%
+    checkBoxCheck = true
+    checkBoxValue = '1'
+    isProduction = 0
+    gbHost = "" 
+
+    # First find project
+    @project = Project.find(params[:id])
+    @project_settings = GenboreeRegistry.find_by_project_id(@project.id)
+    logger.info(@project.inspect)
+    logger.info(@project_settings.inspect)
+
+    if(@project_settings)
+      if(@project_settings.userRedmineLayout == false)
+        checkBoxCheck = false
+        checkBoxValue = '0'
+      end
+      gbHost = @project_settings.gbHost rescue ""
+      isProduction = @project_settings.isProduction rescue false
+      calculatorPath = @project_settings.calculatorPath rescue ""
+      cnvHost = @project_settings.cnvHost rescue ""
+    end
+  %>
+
+  <%#= form_tag("../../../genboree_registry/update") do %>
+  <%= form_tag(:genboree_registry_settings_update) do %>
+    <table style="padding-top:20px;padding-left:20px;">
+      <tr><td><b><%= label_tag "use_redmine_layout", l(:gbregistry_use_redmine_layout) %></b></td><td>
+        <%= check_box "userRedmineLayout", 'aa', { :checked => checkBoxCheck }, checked_value = "1", unchecked_value = "0"   %>
+        <!--<%= check_box_tag "userRedmineLayout"  %>-->
+      </td></tr>
+
+      <tr>
+       <td>
+	 <b><%= label_tag "gb_host", l(:gbregistry_gb_host) %></b>
+       </td>
+       <td>
+        <%= text_field_tag "gbHost", gbHost, {:size => 20 }    %>
+       </td>
+      </tr>
+
+      <tr>
+        <td>
+          <b><%= label_tag "cnvHost", l(:gbregistry_cnv_host)  %></b>
+        </td>
+        <td>
+          <%= text_field_tag "cnvHost", cnvHost , {:size => 40 }    %>
+        </td>
+      </tr>
+
+      <tr>
+       <td>
+	 <b><%= label_tag "isProduction", "Is this a production instance? (check only if on production)" %></b>
+       </td>
+       <td>
+        <input name="isProduction[answer]" type="hidden" value="false">
+	<%= check_box "isProduction", "answer" , { :checked => isProduction } , checked_value = true, unchecked_value = false %>
+       </td>
+      </tr>
+
+      <tr>
+       <td>
+	 <b><%= label_tag "calculatorPath", "Calculator URL before CAIDs e.g. https://calculator.clinicalgenome.org/redmine/projects/pathogenicity_calculator/genboree_patho_calc/calculator?ca="  %></b>
+       </td>
+       <td>
+        <%= text_field_tag "calculatorPath", calculatorPath , {:size => 40 }    %>
+       </td>
+      </tr>
+
+    </table>
+    <dl style="padding-left:20px;">
+      <%= hidden_field_tag "project_id", @project.id %>
+      <%= hidden_field_tag "project_ident", @project.identifier %>
+      <%= submit_tag l(:gbregistry_button_edit) %>
+    </dl>
+  <% end %>

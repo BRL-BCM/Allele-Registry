@@ -1,0 +1,29 @@
+<% begin %>
+<% response_json = JSON.parse(@response_from_registry)%>
+<% if response_json.is_a?(Hash) %>
+   <% if response_json.keys.include?("errorType") %>
+      <div class="row">
+        <div class="col-sm-12 danger">
+	   <h4> We were not able to retrieve any transcript/amino-acid reference sequences for the gene <%= @gene_query[:gene] %> that you queried. </h4>
+           <p> If you believe that the gene symbol is valid, please contact our team at bcm.clingen@gmail.com. The following information might be useful to understand the problem better: </p>
+   
+           <% if response_json.keys.include?("description")  %>
+              <p> <b>Type of the error:</b> <%= response_json["description"] %> </p>
+           <% end %>
+   
+           <% if response_json.keys.include?("message")  %>
+              <p> <b>Explanation:</b> <%= response_json["message"] %> </p>
+           <% end %>
+   <% end %>
+<% else %>
+      <div class="row">
+        <div class="col-sm-12 danger">
+	   <p> We ended up in problem while working with your request. Please contact us at bcm.clingen@gmail.com with a description of the problem. </p>
+        </div>
+      </div>
+<% end %>
+<% rescue %>
+ Rescued from error
+ <%= @response_from_registry %>
+<% end %>
+

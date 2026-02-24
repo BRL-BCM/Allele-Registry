@@ -1,0 +1,41 @@
+<% @hash_response = JSON.parse(@response_from_registry) %>
+<% if @hash_response.keys.include?("errorType") %>
+  <div class="container">
+   <div class="row">
+     <div class="col-sm-12 danger">
+        <h4> We were not able to parse, find, or, register allele using  <%= params["hgvs"] %> HGVS expression. </h4>
+        <p> The following information might be helpful to understand the reason.  </p>
+
+        <% if @hash_response.keys.include?("errorType")  %> 
+           <p> <b>Type of the error:</b> <%= @hash_response["errorType"] %> </p>
+        <% end %>
+
+        <% if @hash_response.keys.include?("message")  %> 
+           <p> <b>Explanation:</b> <%= @hash_response["message"] %> </p>
+        <% end %>
+
+        <% if @hash_response.keys.include?("actualAllele") %> 
+               <p><b> Reference sequence: </b> <%= @hash_response["sequenceName"] %> </p>
+               <p><b> Actual allele:  </b> <%= @hash_response["actualAllele"] %>  </p>
+               <p><b> Provided in the HGVS expression:  </b> <%= @hash_response["givenAllele"] %> </p>
+               <p><b> Region:  </b> <%= @hash_response["region"] %></p>
+        <% end %>
+     </div>
+   </div>
+  </div>
+<% end %>
+
+<% if ! @hash_response.keys.include?("errorType") %>
+  <script type="text/javascript">
+    window.location.href="by_caid?caid=<%=@hash_response["@id"].match(/[CP]A[0-9]+/)%>"  
+    // put your correct path in a string here
+  </script>
+    <!--div> The allele is succesfully registered </div-->
+<% end %>
+
+<style>
+.hide-me {
+    display: none;
+}
+</style>
+

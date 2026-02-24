@@ -1,0 +1,19 @@
+<% response_hash = JSON.parse(@response_from_registry) %>
+<div class="container">
+ <div class="row">
+   <div class="col-sm-12 bg-danger">
+      <h4> 
+         The registry could not find the gene symbol "<%=@queried_gene%>". Please make sure it is valid symbol.
+      </h4>
+      <p> The following information might be helpful to understand the reason.
+
+      <% if response_hash.keys.include?("errorType")  %>
+         <p> <b>Type of the error:</b> <%= response_hash["errorType"] %> </p>
+      <% end %>
+
+      <% if response_hash.keys.include?("description")  %>
+         <p> <b>Description of the error:</b> <%= response_hash["description"] %> </p>
+      <% end %>
+   </div>
+ </div>
+</div>

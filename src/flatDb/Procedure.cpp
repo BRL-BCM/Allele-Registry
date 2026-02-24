@@ -12,9 +12,8 @@ namespace flatDb {
 	template<typename tKey>
 	void ProcedureT<tKey>::announceAsCompleted()
 	{
-		fAccessToCompleted.lock();
+		std::unique_lock<std::mutex> access(fAccessToCompleted);
 		fCompleted = true;
-		fAccessToCompleted.unlock();
 		fWaitingForCompleted.notify_all();
 	}
 
@@ -22,16 +21,17 @@ namespace flatDb {
 	void ProcedureT<tKey>::waitUntilCompleted()
 	{
 		std::unique_lock<std::mutex> access(fAccessToCompleted);
-		while ( ! fCompleted ) {
-			fWaitingForCompleted.wait(access);
-		}
+		while ( ! fCompleted ) fWaitingForCompleted.wait(access);
 	}
 
 	template<typename tKey>
 	void ProcedureT<tKey>::subProcedureWasDeleted()
 	{
+		this->fAccessCounter.lock();
 		--fCounter;
-		if (fCounter == 0) allSubProceduresWereDeleted();
+		unsigned counter = fCounter;
+		this->fAccessCounter.unlock();
+		if (counter == 0) allSubProceduresWereDeleted();
 	}
 
 
@@ -43,7 +43,6 @@ namespace flatDb {
 		if ( data.empty() ) return;
 		auto compDataElementToKey = [](std::pair<tKey,uint8_t const*> const& e, tKey const& k)->bool{ return (e.first<k); };
 
-		std::lock_guard<std::mutex> guard(this->fAccessToCompleted);
 
 		auto it1 = std::lower_bound( data.begin(), data.end(), fFirstKey, compDataElementToKey );
 		auto it2 = std::lower_bound( it1, data.end(), fLastKey, compDataElementToKey );
@@ -78,7 +77,9 @@ namespace flatDb {
 			lastCall = true;
 		}
 		if ( lastCall || (lastProcessedKey >= fLastKey) ) {
+			this->fAccessToEndOfQuery.lock();
 			fEndOfQuery = true;
+			this->fAccessToEndOfQuery.unlock();
 		} else {
 			fFirstKey = lastProcessedKey + 1;  // lastProcessedKey < fLastKey
 		}
@@ -91,9 +92,9 @@ namespace flatDb {
 	template<typename tKey>
 	void ProcedureReadRecordsFromRangeT<tKey>::allSubProceduresWereDeleted()
 	{
-		this->fAccessToCompleted.lock();
+		this->fAccessToEndOfQuery.lock();
 		bool const completed = fEndOfQuery;
-		this->fAccessToCompleted.unlock();
+		this->fAccessToEndOfQuery.unlock();
 		if (completed) {
 			this->announceAsCompleted();
 		} else {
@@ -106,9 +107,6 @@ namespace flatDb {
 	std::map<unsigned,typename SubProcedureT<tKey>::SP> ProcedureReadRecordsFromRangeT<tKey>::createSubProcedures(std::vector<BinT<tKey>> const & entries)
 	{
 		ASSERT(! entries.empty());
-		this->fAccessToCompleted.lock();
-		// to synchronize fFirstKey
-		this->fAccessToCompleted.unlock();
 
 		auto it = std::upper_bound(entries.begin(), entries.end(), fFirstKey, [](tKey const & k,Bin const & b)->bool{ return (k < b.firstKey); } );
 		if ( it != entries.begin() ) {
@@ -117,7 +115,9 @@ namespace flatDb {
 				std::map<unsigned,typename SubProcedureT<tKey>::SP> m;
 				unsigned const index = it - entries.begin();
 				m[index].reset( new SubProcedureReadRecordsFromRange(this) );
+				this->fAccessCounter.lock();
 				this->fCounter = m.size();
+				this->fAccessCounter.unlock();
 				return m;
 			}
 			++it;
@@ -130,7 +130,9 @@ namespace flatDb {
 			std::map<unsigned,typename SubProcedureT<tKey>::SP> m;
 			unsigned const index = it - entries.begin();
 			m[index].reset( new SubProcedureReadRecordsFromRange(this) );
+			this->fAccessCounter.lock();
 			this->fCounter = m.size();
+			this->fAccessCounter.unlock();
 			return m;
 		}
 		// ----- no bins overlap with given range
@@ -143,7 +145,9 @@ namespace flatDb {
 			std::cerr << "Error durign read by region (empty): " << e.what() << std::endl;
 			lastCall = true;
 		}
+		this->fAccessToEndOfQuery.lock();
 		fEndOfQuery = true;
+		this->fAccessToEndOfQuery.unlock();
 		this->announceAsCompleted();
 		std::map<unsigned,typename SubProcedureT<tKey>::SP> m;
 		return m;
@@ -184,8 +188,9 @@ namespace flatDb {
 			// move to the next range of keys
 			iR = iR2;
 		}
-
+		this->fAccessCounter.lock();
 		this->fCounter = m.size();
+		this->fAccessCounter.unlock();
 		return m;
 	}
 
@@ -223,8 +228,9 @@ namespace flatDb {
 			// move to the next range of keys
 			iR = iR2;
 		}
-
+		this->fAccessCounter.lock();
 		this->fCounter = m.size();
+		this->fAccessCounter.unlock();
 		return m;
 	}
 

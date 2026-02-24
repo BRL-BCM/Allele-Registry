@@ -1,16 +1,42 @@
 #include "requests.hpp"
 
 
-	RequestFetchReference::RequestFetchReference(std::string const & id, bool details)
+	RequestFetchReference::RequestFetchReference(std::string const & ref, std::string const & pRefBuild, bool details)
 	: Request(documentType::reference)
 	{
-		if (id.substr(0,2) != "RS" || id.size() < 3) {
-			throw ExceptionIncorrectRequest("Reference id must consist of prefix 'RS' and decimal number. Given value: '" + id + "'.");
+		fRefBuild = (pRefBuild.size() == 0)?"GRCh38":pRefBuild;
+		fRefId = ReferenceId::null;
+		if(ref.rfind("RS", 0) == 0) {
+			if (ref.substr(0,2) != "RS" || ref.size() < 3) {
+				throw ExceptionIncorrectRequest("Reference id must consist of prefix 'RS' and decimal number. Given value: '" + ref + "'.");
+			}
+			for (unsigned i = 2; i < ref.size(); ++i) if (ref[i] < '0' || ref[i] > '9') {
+				throw ExceptionIncorrectRequest("Reference id must consist of prefix 'RS' and decimal number. Given value: '" + ref + "'.");
+			}
+			fRefId = referencesDb->getReferenceId(ref);
+		} else if(ref.rfind("chr", 0) == 0) {
+			std::string fRefGenome = fRefBuild;
+			ReferenceGenome refGenome = parseReferenceGenome(fRefGenome);
+			// strip chr prefix
+			std::string fChr = ref.substr(3);
+			Chromosome chr = parseChromosome(fChr);
+			fRefId = referencesDb->getReferenceId(refGenome, chr);
+		} else {
+			// try to find name
+			bool searching = true;
+			for(int i=0;i<referencesDb->getNumMetadata() && searching;i++) {
+				ReferenceId id(i);
+				std::vector<std::string> names = referencesDb->getNames(id);
+				for(int j=0;j<names.size();j++) {
+					if(ref.compare(names[j]) == 0) {
+						// match
+						fRefId = id;
+						searching = false;
+						break;
+					}
+				}
+			}
 		}
-		for (unsigned i = 2; i < id.size(); ++i) if (id[i] < '0' || id[i] > '9') {
-			throw ExceptionIncorrectRequest("Reference id must consist of prefix 'RS' and decimal number. Given value: '" + id + "'.");
-		}
-		fRsId = boost::lexical_cast<unsigned>(id.substr(2));
 		fDetails = details;
 	}
 
@@ -24,11 +50,7 @@
 	void RequestFetchReference::process()
 	{
 		Document doc = DocumentReference();
-		std::string rsId = boost::lexical_cast<std::string>(fRsId);
-		while (rsId.size() < 6) rsId = "0" + rsId;
-		rsId = "RS" + rsId;
-		std::vector<ReferenceId> ids = referencesDb->getReferencesByName(rsId);
-		ReferenceId const id = (ids.empty()) ? (ReferenceId::null) : (ids.front());
+		ReferenceId const id = fRefId;
 		if (id == ReferenceId::null) {
 			doc = DocumentError(errorType::NotFound);
 		} else {

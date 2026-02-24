@@ -1,0 +1,18 @@
+<!--
+<form>
+  <div class="form-group">
+    <label for="comment">HGVS expression:</label>
+    <textarea class="form-control" rows="20" id="comment"></textarea>
+  </div>
+</form>
+-->
+
+<%= form_tag("start", "method" => "post") do %>
+  <h2>Paste HGVS expressions, one per line (max: 2000 characters)</h2>
+  <%= label_tag("hgvs", "HGVS expressions:") %><br>
+  <%= text_area_tag("hgvs", "", {"class" => "form-control", 
+                              "rows" => "20",
+                              "id" => "comment",
+                              "maxlength" => "2000" } ) %><br>
+  <%= submit_tag("Search", { "class" => "btn btn-primary"}) %>
+<% end %>

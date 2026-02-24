@@ -5,12 +5,14 @@
 #include <vector>
 #include <memory>
 #include <ostream>
+#include <fstream>
 #include <cstdint>
 #include "../core/variants.hpp"
 
 class Parser {
 public:
 	// false - no data were returned, EOF reached
+	virtual bool logPayload(std::ofstream & payload) = 0;
 	virtual bool parseRecords(std::vector<std::vector<std::string>> & out, std::vector<unsigned> & outLinesOffsets, unsigned maxRecordsCount) = 0;
 	// return number of parsed bytes
 	virtual uint64_t numberOfParsedBytes() const = 0;
@@ -26,6 +28,7 @@ private:
 	Pim * pim;
 public:
 	ParserVcf(std::shared_ptr<std::vector<char>> body);
+	bool logPayload(std::ofstream & payload) override final;
 	bool parseRecords(std::vector<std::vector<std::string>> & out, std::vector<unsigned> & outLinesOffsets, unsigned maxRecordsCount) override final;
 	uint64_t numberOfParsedBytes() const override final;
 	std::string lineByOffset(unsigned lineOffset) const override final;
@@ -38,6 +41,7 @@ private:
 	Pim * pim;
 public:
 	ParserTabSeparated(std::shared_ptr<std::vector<char>> body);
+	bool logPayload(std::ofstream & payload) override final;
 	bool parseRecords(std::vector<std::vector<std::string>> & out, std::vector<unsigned> & outLinesOffsets, unsigned maxRecordsCount) override final;
 	uint64_t numberOfParsedBytes() const override final;
 	std::string lineByOffset(unsigned lineOffset) const override final;
@@ -50,6 +54,7 @@ private:
 	Pim * pim;
 public:
 	ParserVcf2(std::shared_ptr<std::vector<char>> body, std::vector<ReferenceId> const & refIdByChromosome);
+	bool logPayload(std::ofstream & payload);
 	bool parseRecords(std::vector<PlainVariant> & out, unsigned maxRecordsCount);
 	uint64_t numberOfParsedBytes() const;
 	void buildVcfResponse(std::ostream &, std::vector<std::vector<std::string>> const &);

@@ -1,0 +1,6 @@
+<td class="canonical-allele">
+  <%= caid = uri_to_caid hit["@id"] %>
+   <% if has_aminoacid_alleles? hit %>
+       <span style="font-size: 0.7em">[Amino-Acid Allele]</span>
+   <% end %>
+</td>

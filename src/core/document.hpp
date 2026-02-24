@@ -34,6 +34,7 @@ struct DocumentActiveGenomicVariant
 	std::vector<VariantDetailsGenomeBuild> definitionsOnGenomeBuilds;
 	std::vector<VariantDetailsGeneRegion > definitionsOnGenesRegions;
 	std::vector<VariantDetailsTranscript > definitionsOnTranscripts;
+	std::set<std::string> clingenPreferredTitle;
 	std::string jsonExternalSources;
 	DocumentActiveGenomicVariant() {}
 	DocumentActiveGenomicVariant(NormalizedGenomicVariant const & d) : mainDefinition(d) {}

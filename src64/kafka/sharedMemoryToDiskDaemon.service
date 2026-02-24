@@ -1,0 +1,18 @@
+[Unit]
+Description=sharedMemoryToDiskDaemon
+After=alleleRegistry.service
+
+[Service]
+User=allelereg
+Group=allelereg
+Restart=always
+RestartSec=10s
+Environment=LD_LIBRARY_PATH=/opt/local/kafka/1.9.2/lib:/opt/local/yaml-cpp/0.6.3/lib:/opt/local/mysql-connector/6.1.6/lib:/opt/local/boost/1.71/lib
+ExecStart=/usr/local/brl/local/alleleRegistry/bin/sharedMemoryToDiskDaemon /usr/local/brl/local/alleleRegistry/conf/sharedMemoryToDiskDaemon.yaml
+WorkingDirectory=/data/alleleRegistry/data/msgSpool
+LimitCORE=infinity
+LimitNOFILE=16384
+LimitNPROC=32768
+
+[Install]
+WantedBy=multi-user.target

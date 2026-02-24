@@ -10,6 +10,8 @@ struct label {
 		  __unknownField__ = 1  // zero not allowed !
 		, _at_context
 		, _at_id
+		, locus
+		, communityStandardTitle
 		, AllelicEpigenome
 		, CDS
 		, COSMIC
@@ -77,7 +79,12 @@ struct label {
 		, type
 		, variant
 		, variationId
-		, MANEPrefRefSeq
+		, MANE
+		, RefSeq
+		, maneVersion
+		, maneStatus
+		, nucleotide
+		, protein
 		, transformations
 		, service
 		, algorithms

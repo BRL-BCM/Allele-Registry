@@ -1,0 +1,98 @@
+<%= javascript_include_tag "selection.js", :plugin => 'genboree_registry' %>
+
+<% response    = JSON.parse(@response_back) %>
+<% sequence    = response["splicedSequence"] %>
+<% cds_start   = response["CDS"]["start"].to_i %>
+<% cds_end     = response["CDS"]["end"].to_i %>
+<% coding_sequence = sequence[cds_start...cds_end] %>
+<% seqname     = @transcript %>
+<% 
+   # Preparing for optimal size of text area
+   sequenceNewLine = 60
+   totalLinesInTextArea = (( coding_sequence.length / sequenceNewLine ) + 1).to_f
+   totlaNumberOfColumns = sequenceNewLine + 20
+   numbers = [0-cds_start]
+%>
+   <%# Add space in the sequence %>
+   <% to_attach = (coding_sequence).gsub(/(.{10})(?=.)/, '\1 \2') %>
+   <%# Add newline in the sequence %>
+   <% to_attach = to_attach.gsub(/(.{66})(?=.)/, '\1
+\2') %>
+   <% to_attach = to_attach.gsub(/ \n/,'
+')%>
+   <% (0...( ((coding_sequence.length)/sequenceNewLine) - 1 )).each do |i| 
+          numbers << numbers.last + 60
+      end
+      numbers = numbers.join("
+")
+   %>
+
+<!-- div class="container" -->
+  <div class="row">
+    <div class='panel panel-default'>
+    <div id='reference-sequence-id' class='panel-heading'>
+       <h3><%= seqname %></h3>
+    </div>
+    <div class='panel-body'>
+      <div class='row'>
+        <div class='col-sm-1 sequence'>
+           <textarea readonly class='sequence' style="line-height: normal" rows=<%=totalLinesInTextArea%>><%=numbers%></textarea>
+        </div>
+        <div class='col-sm-11 sequence'>
+           <textarea readonly id='myArea' style="line-height: normal" rows=<%=totalLinesInTextArea%> cols=<%=totlaNumberOfColumns%>><%=to_attach%></textarea>
+        </div>
+      </div>
+    </div>
+    <div class='panel-footer'>
+      <div class='row'>
+        <div class='col-sm-12'>
+          <div class'row'>
+            <div class='col-sm-2'>
+               Start:
+            </div> 
+            <div class='col-sm-10'>
+               <input id='startPos' readonly>
+               </input>
+            </div>
+            <div class='col-sm-2'>
+               End:
+            </div>
+            <div class='col-sm-10'>
+               <input id='endPos' readonly>
+               </input>
+            </div>
+            <div class='col-sm-2'>
+               Reference:
+            </div>
+            <div class='col-sm-10'>
+               <input style='width:60%' id='referenceAllele' readonly>
+               </input>
+            </div>
+            <div class='col-sm-2'>
+               Alternate: 
+            </div>
+            <div class='col-sm-10'>
+               <input style='width:60%' id='alternateAllele'>
+               </input>
+            </div>
+         </div> <!--Row ends-->
+      </div> <!-- Column ends -->
+    </div> <!-- Row ends -->
+    <br>
+    <div class='row'>
+      <div class='col-sm-12'>
+         <button id='register-button' disabled class='btn btn-primary'>Register Allele</button>
+       </div>
+    </div>
+   </div>
+ </div>
+<!-- /div -->
+
+<style>
+ .sequence {
+   font-family: monospace ;
+ }
+.hide-me {
+    display: none;
+}
+</style>

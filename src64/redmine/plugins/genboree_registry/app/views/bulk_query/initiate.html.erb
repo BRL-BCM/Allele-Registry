@@ -1,0 +1,61 @@
+<div class="row">
+  <h2>Summary of alleles queried using bulk query:</h2>
+  <br>
+</div>
+<div class="row">
+      <%= render :partial => 'bulk_partial', :locals => {:input_response => @response_from_registry , :input_hgvs => params["hgvs"]} %>
+</div>
+<style>
+.hide-me {
+    display: none;
+}
+.gene {
+  font-size: 0.6em;
+}
+.panel {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+p {
+  font-weight: 200;
+  color: grey;
+}
+.label-jsonld {
+  background: #00d2e5;
+  border-radius: 1em;
+  font-style: normal;
+  font-size: 0.7em;
+  font-weight: 700;
+}
+.add-padding-top {
+  padding-top: 0.5em;
+}
+.hide-me {
+    display: none;
+}
+.transcript-cdot, .aa-pdot {
+ font-size: 0.9em;
+}
+.canonical-allele {
+ font-weight: 600;
+ font-style: italic;
+}
+.transcript-cdot, .grch38-gdot, .aa-pdot {
+  word-break: break-all
+}
+.label-clinvar {
+  background-color: goldenrod;
+}
+.label-exac {
+  background: cornflowerblue;
+}
+.label-gnomad {
+  background: coral;
+}
+.label-dbsnp {
+  background: palevioletred;
+}
+.label-allelic {
+  background: #777777;
+}
+</style>

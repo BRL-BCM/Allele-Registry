@@ -1,0 +1,6 @@
+<td class="grch38-gdot">
+ <% if has_genomic_alleles? hit %>
+    <% genomic_hgvs = get_genomic_hgvs hit %>
+    <%= genomic_hgvs.find{|ga| ga["assembly"] == "GRCh38"}["expressions"].find{|ex| ex.include?("NC_")}.split(":")[1] rescue "-"%>
+ <% end %>
+</td>

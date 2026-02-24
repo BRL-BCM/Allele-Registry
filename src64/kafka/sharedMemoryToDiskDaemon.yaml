@@ -1,0 +1,20 @@
+# path: kafka messages are stored here, $path/ready
+basePath:
+    path: /data/WORKSPACE/antonk/data/basePath
+
+# path: logs are written here
+logFile:
+    path: /data/WORKSPACE/antonk/data/sharedMemoryToDiskDaemon.log
+
+# batchSleep: [ms] sleep time between messages
+# errorSleep: [ms] sleep time if there is an error
+# flushTimeout: [ms] after this time interval flush to file, even if not a full message (60000 ms = 1 minute)
+# messageSize: [bytes]
+#   Note: do not exceed 1Mb, since that's the kafka message size limit
+#   also: do not specify very small message sizes (10bytes ish), you might have i-node issues
+performance:
+    batchSleep: 100
+    errorSleep: 5000
+    messageSize: 250000
+    flushTimeout: 60000
+

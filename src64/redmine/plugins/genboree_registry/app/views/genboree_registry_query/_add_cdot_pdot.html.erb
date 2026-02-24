@@ -1,0 +1,15 @@
+<td class="transcript-cdot">
+  <% if has_transcript_alleles? hit %>
+   <% (get_uniq_cp hit).uniq.each do |ta|  %>
+    <%
+       trans = ta.split("$")[0]
+       amino = ta.split("$")[1]
+    %>
+    <% if amino == "" or amino.nil? %>
+      <%= "#{trans}" %> <br>
+    <% else %>
+      <%= "#{trans} (#{amino})" %> <br>
+    <% end %>
+   <% end %>
+  <% end %>
+</td>

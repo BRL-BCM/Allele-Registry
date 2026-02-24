@@ -1,0 +1,90 @@
+<%= javascript_include_tag 'angular.js', :plugin => 'genboree_registry' %>
+<div ng-app="myApp" ng-controller="myCtrl">
+   <br>
+   <h2>
+     Search insertion/deletion/indels in registry with partial information
+   </h2>
+   <br>
+   <%= form_tag({},{:method => :post, :name => :form}) do %>
+     <div class="row">
+      <div class="col-sm-2">
+       <%= label_tag :gene, "Gene symbol" %>
+       <%= text_field_tag :gene, @gene_query[:gene], {:class => "form-control", :type => "text", 'ng-model' => "gene" , 'ng-pattern' => "geneRegex", :required => true}  %>
+       <!-- h4>For exmple:</h4>
+       <ul>
+         <li>APC</li>
+         <li>TP53</li>
+         <li>BRCA1</li>
+       </ul -->
+      </div>
+      <div class="col-sm-3">
+       <%= label_tag :type, "Transcript (c.) or Amino-acid (p.)" %>
+       <%= select_tag :type, options_for_select(["Select one","c.","p."], "disabled" => "Select one"), {"class" => "form-control", 'ng-model' => "type", 'required' => true, 'ng-pattern' => 'typeValid' }%>
+      </div>
+      <div class="col-sm-7">
+       <%= label_tag :variation, "variation" %>
+       <%= text_field_tag :variation, @gene_query[:variation], {:class => "form-control", 'ng-model' => "variation", 'ng-pattern' => "regex" , 'required' => true, 'ng-disabled' => 'form.gene.$invalid || form.type.$invalid' }  %>
+       <h4 ng-if="type == 'c.'">For example:</h4> 
+       <ul class="when-cdot" ng-if="type == 'c.'">
+	   <li> 123del </li>
+	   <li> 123delinsTTGA </li>
+	   <li> 123_154del </li>
+	   <li> 123_124insTGC </li>
+	   <li> 125_126delinsTGC </li>
+       </ul>
+       <h4 ng-if="type == 'p.'">For example:</h4> 
+       <ul class="when-pdot" ng-if="type == 'p.'">
+	   <li> Trp54delinsArgLys </li>
+	   <li> Trp54del </li>
+	   <li> Trp54_Lys55delinsArgLys </li>
+       </ul>
+      </div>
+      </div>
+     <br>
+     <br>
+     <div class="row">
+      <div class="col-sm-1">
+       <%= submit_tag "Query" , {"id" => "indel-query" , "class" => "btn btn-primary", 'ng-disabled' => 'form.gene.$invalid || form.type.$invalid || form.variation.$invalid'} %>
+      </div>
+      <div class="col-sm-3">
+       <a href="gene_to_hgvs" class="btn btn-primary" role="button" aria-pressed="true">Switch to substitutions</a>
+      </div>
+      <br>
+     <% end %>
+   </div>
+   <br>
+   <br>
+   <br>
+   <br>
+   <br>
+   <div class="row">
+    <!-- div>Gene Valid? : <code>{{form.gene.$valid}}</code></div>
+    <div>Type Valid? : <code>{{form.type.$valid}}</code></div>
+    <div>Variation Valid? : <code>{{form.variation.$valid}}</code></div -->
+   </div>
+</div>
+
+<style>
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+</style>
+<script>
+var app = angular.module('myApp', []);
+app.controller('myCtrl', function($scope) {
+    $scope.gene = "";
+    $scope.type = "Select one";
+    $scope.variation = "";
+    // validation of fields
+    $scope.regex = '^\\d+del$|^\\d+_\\d+del$|^\\d+delins[ATGC]+$|^\\d+_\\d+delins[ATGC]+$|^\\d+_\\d+ins[ATGC]+$|^(Gly|Ala|Leu|Val|Ile|Trp|Tyr|His|Phe|Glu|Asp|Gln|Asn|Arg|Lys|Met|Ser|Cys|Thr|Pro)\\d+del$|^(Gly|Ala|Leu|Val|Ile|Trp|Tyr|His|Phe|Glu|Asp|Gln|Asn|Arg|Lys|Met|Ser|Cys|Thr|Pro)\\d+delins(Gly|Ala|Leu|Val|Ile|Trp|Tyr|His|Phe|Glu|Asp|Gln|Asn|Arg|Lys|Met|Ser|Cys|Thr|Pro)+$|^(Gly|Ala|Leu|Val|Ile|Trp|Tyr|His|Phe|Glu|Asp|Gln|Asn|Arg|Lys|Met|Ser|Cys|Thr|Pro)\\d+_(Gly|Ala|Leu|Val|Ile|Trp|Tyr|His|Phe|Glu|Asp|Gln|Asn|Arg|Lys|Met|Ser|Cys|Thr|Pro)\\d+delins(Gly|Ala|Leu|Val|Ile|Trp|Tyr|His|Phe|Glu|Asp|Gln|Asn|Arg|Lys|Met|Ser|Cys|Thr|Pro)+$'
+    $scope.geneRegex = '^[A-Z0-9]\+$'
+    $scope.typeValid = '^c.$|^p.$'
+    // enable variatio field
+    // enable query
+});
+</script>

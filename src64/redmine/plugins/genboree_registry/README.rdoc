@@ -1,0 +1,7 @@
+= genboree_registry
+# Create project
+# Add registry plugin for that project
+# Give register allele permission to author/administrator, etc
+# the following path should be available then
+{redminemount}/projects/{nameoftheproject}/genboree_registry/create?hgvs={hgvsExpression}
+{redminemount}/projects/{nameoftheproject}/genboree_registry/file_register

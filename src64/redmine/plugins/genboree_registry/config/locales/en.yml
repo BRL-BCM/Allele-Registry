@@ -1,0 +1,34 @@
+# ----------------------------------------------------
+# Localization Strings for GenboreeKB - Actionability Curation 
+# - only English (en) to start
+# - put other languages in their own files (e.g. fr.yml) like Redmine does
+# - all localization keys for the GenboreeKB plugin must have the gbkb_ prefix
+# - after the gbkb_ prefix, follow usual naming convention of label_ field_ test_ permiission_ etc etc etc
+#   used in Rails and [most] standard plugins.
+# ----------------------------------------------------
+# English strings go here for Rails i18n
+en:
+  gbregistry_label_project_settings_tab: Registry
+  gbregistry_label_edit_settings: Registry Settings
+  gbregistry_gb_host: Genboree Host
+  gbregistry_cnv_host: CNV Host
+  gbregistry_button_edit: Update
+  gbregistry_settings_label_dir: Content Dir Pattern
+  gbregistry_settings_label_index_files: Index Files
+  gbregistry_settings_label_valid_exts: Valid Extensions Regexp
+  gbregistry_settings_label_max_size: Max Embedded File Size
+  gbregistry_settings_label_caption: Menu Name
+  gbregistry_label_gb_filedir_name: Name
+  gbregistry_label_gb_filedir_size: Size
+  gbregistry_label_gb_filedir_updated: Last Updated
+  gbregistry_label_gb_filedir_actions: Actions
+  permission_gbregistry_view_sencha: View Sencha Assets
+  permission_gbregistry_view_entry: View Entry Page
+  gbregistry_use_redmine_layout: Use Redmine Layout
+  pubmed: PubMed
+  civic: CIViC
+  pcer: PCER
+  allelicEpigenome: Allelic Epigenome
+  erepo: ERepo
+  ereg: EReg
+  mutsplicedb: MutSpliceDB

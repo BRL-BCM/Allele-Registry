@@ -1,0 +1,87 @@
+<script type='text/javascript' src='https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js'></script>
+<%= render :partial => "query" %>
+<%= render :partial => "assisted_hgvs" %>
+<%= render :partial => "bulk_query" %>
+<%= render :partial => "register_alleles" %>
+<%= render :partial => "navigate_further" %>
+
+<!-- 
+<div class="container">
+ <div class="row">
+  <div class="col-sm-6">
+   <div class="well">
+    <h2>What is the Allele Registry?</h2>
+    <p> 
+       The ClinGen Allele Registry provides unique variant identifiers both programmatically (via APIs) and via this search interface. 
+    </p>
+    <button type="button" class="btn btn-primary" data-toggle="modal"  data-target="#learnMoreModal">
+       Know More
+    </button>
+    <div class="modal fade" id="learnMoreModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+              <h3 class="modal-title"> ClinGen Allele Registry
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                   <span aria-hidden="true">&times;</span> 
+                </button> 
+              </h3> 
+	  </div>
+          <div class="modal-body">
+             <p>
+               The ClinGen Allele Registry provides unique variant identifiers both programmatically (via APIs) and via this search interface. If a variant is not present in the Registry, authorized users may register the variant and get an identifier within seconds. The variants are automatically mapped across known reference sequences and to identifiers from major variant databases.
+               <br>
+               <br>
+               The current content of the Registry is searchable using HGVS expressions representing nucleic acid or amino acid variants across more than 500,000 reference sequences (genome assemblies, transcripts, amino acid sequences). Alleles can be also queried by locus, gene and ClinVar or dbSNP identifiers. The registry regularly imports variants from ExAC, ClinVar and other databases.
+               <br>
+               <br>
+               To facilitate wide integration of the registry services with existing software and workflows for variant evaluation, e.g. Pathogenicity Calculator, all the functionalities of the registry are exposed via REST APIs. The API allows also for bulk query and registration of variants. Hundreds of variants saved as a VCF file or a list of HGVS expressions can be processed as a batch in less than ten seconds. For instructions on how to register large batches of variants, follow the "API specification" link below.
+               <br>
+               <br>
+               To register new alleles in the Allele Registry, you will need a valid login and password. To create a login, please send an email request to bcm.clingen@gmail.com with a preferred login name.
+               <br>
+               <br>
+               If you have any questions, please do not hesitate to contact bcm.clingen@gmail.com.
+             </p>
+	  </div>
+        </div>
+      </div>
+    </div>
+   </div>
+  </div>
+  <div class="col-sm-6">
+   <div class="well">
+    <h2>Register allele</h2>
+    <p>To register new alleles in the Allele Registry, you will need a login and password. To create a login, please send an email request to bcm.clingen@gmail.com with a preferred login name. </p>
+   </div>
+  </div>
+ </div>
+ <div class="row">
+  <div class="col-sm-4">
+   <div class="well">
+    <h2> Bulk Registration </h2>
+    <p> Upload file containing HGVS expressions for bulk registration.  </p>
+     <a href="file_register" type="button" class="btn btn-primary">
+        File upload
+     </a>
+   </div>
+  </div>
+  <div class="col-sm-4">
+   <div class="well">
+    <h2> Assisted registration </h2>
+    <p> Do not have HGVS expression of the allele to register? </p>
+     <a href="../assisted_hgvs/from_gene" type="button" class="btn btn-primary">
+       Register without HGVS
+     </a>
+    </p>
+   </div>
+  </div>
+  <div class="col-sm-4">
+   <div class="well">
+    <h2> Register allele using APIs</h2>
+    <p> Allele registery APIs are well documented. </p>
+   </div>
+  </div>
+ </div>
+</div>
+-->

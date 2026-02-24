@@ -229,6 +229,20 @@ namespace flatDb {
 
 
 	// read directly from storage to given buffer (cache is omitted)
+	void StorageWithCache::readIndexPages(unsigned firstPageId, unsigned pagesCount, uint8_t* buffer)
+	{
+		pim->file.readIndexPages(firstPageId, pagesCount, buffer);
+	}
+
+
+	// write directly from given buffer to storage (cache is omitted)
+	void StorageWithCache::writeIndexPages(unsigned firstPageId, unsigned pagesCount, uint8_t const* buffer)
+	{
+		pim->file.writeIndexPages(firstPageId, pagesCount, buffer);
+	}
+
+
+	// read directly from storage to given buffer (cache is omitted)
 	void StorageWithCache::readPages(unsigned firstPageId, unsigned pagesCount, uint8_t* buffer)
 	{
 		pim->file.readPages(firstPageId, pagesCount, buffer);

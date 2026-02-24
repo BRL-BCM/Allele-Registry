@@ -27,7 +27,7 @@ void RequestQueryAllelesByGene::process()
 		std::sort(kv.second.begin(), kv.second.end());
 		for (auto const & reg: kv.second) {
 			if (fRange.limit == 0) break;
-			unsigned const chunkSize = std::min(fRange.limit, 1024u*1024u);
+			unsigned const chunkSize = std::min(fRange.limit, fMaxChunkSize);
 			allelesDb->queryVariants(callback, fRange.skip, kv.first, reg.left(), reg.right(), chunkSize, fRange.limit);
 		}
 	}

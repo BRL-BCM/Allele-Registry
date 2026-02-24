@@ -275,11 +275,16 @@ Dispatcher::Dispatcher(Configuration const & conf) : pim(new Pim(conf))
 {
 	Request::initGlobalVariables(conf);
 
+	// gene intersection
+	pim->get[ReqType("geneIntersection").param("coord")] = [](Params & p)->Request*{ return new RequestGeneIntersection(p[0].asStr()); };
+
 	// single objects
 	pim->get[ReqType("allele", "{CAid}")]     = [](Params & p)->Request*{ return new RequestFetchAlleleById  (p[0].asStr()); };
 	pim->get[ReqType("allele").param("hgvs")] = [](Params & p)->Request*{ return new RequestFetchAlleleByHgvs(p[0].asStr(),false); };
 	pim->put[ReqType("allele").param("hgvs")] = [](Params & p)->Request*{ return new RequestFetchAlleleByHgvs(p[0].asStr(),true ); };
 	pim->get[ReqType("refseq", "{RSid}")]     = [](Params & p)->Request*{ return new RequestFetchReference   (p[0].asStr()); };
+	pim->get[ReqType("refseq").param("id")]   = [](Params & p)->Request*{ return new RequestFetchReference   (p[0].asStr()); };
+	pim->get[ReqType("refseq").param("id").param("refGenome")]   = [](Params & p)->Request*{ return new RequestFetchReference   (p[0].asStr(), p[1].asStr()); };
 	pim->get[ReqType("gene"  , "{GNid}")]            = [](Params & p)->Request*{ return new RequestFetchGene(p[0].asStr()); };
 	pim->get[ReqType("gene"  ).param("HGNC.symbol")] = [](Params & p)->Request*{ return new RequestFetchGene(p[0].asStr(), true); };
 	// Dispatcher for coordinate transformation
@@ -294,7 +299,8 @@ Dispatcher::Dispatcher(Configuration const & conf) : pim(new Pim(conf))
 
 	// queries - alleles
 	pim->get[ReqType("alleles",supportPagination).param("name")] = [](Params & p){ return new RequestQueryAllelesById(p.range(),{p[0].asStr()}); };
-	pim->get[ReqType("alleles",supportPagination).param("gene")] = [](Params & p){ return new RequestQueryAllelesByGene(p.range(),{p[0].asStr()}); };
+	pim->get[ReqType("alleles",supportPagination).param("gene")] = [](Params & p){ return new RequestQueryAllelesByGene(p.range(),p[0].asStr(),1024); };
+	pim->get[ReqType("alleles",supportPagination).param("gene").param("batch")] = [](Params & p){ return new RequestQueryAllelesByGene(p.range(),p[0].asStr(),p[1].asUInt()); };
 	pim->get[ReqType("alleles",supportPagination).param("ClinVar.variationId"  )] = [](Params & p){ return new RequestQueryAllelesById(p.range(),{std::make_pair(identifierType::ClinVarVariant    ,p[0].asStr())}); };
 	pim->get[ReqType("alleles",supportPagination).param("ClinVar.alleleId"     )] = [](Params & p){ return new RequestQueryAllelesById(p.range(),{std::make_pair(identifierType::ClinVarAllele     ,p[0].asStr())}); };
 	pim->get[ReqType("alleles",supportPagination).param("ClinVar.RCV"          )] = [](Params & p){ return new RequestQueryAllelesById(p.range(),{std::make_pair(identifierType::ClinVarRCV        ,p[0].asStr())}); };
@@ -304,7 +310,10 @@ Dispatcher::Dispatcher(Configuration const & conf) : pim(new Pim(conf))
 	pim->get[ReqType("alleles",supportPagination).param("ExAC.id"              )] = [](Params & p){ return new RequestQueryAllelesById(p.range(),{std::make_pair(identifierType::ExAC              ,p[0].asStr())}); };
 	pim->get[ReqType("alleles",supportPagination).param("gnomAD.id"            )] = [](Params & p){ return new RequestQueryAllelesById(p.range(),{std::make_pair(identifierType::gnomAD            ,p[0].asStr())}); };
 	pim->get[ReqType("alleles",supportPagination).param("refseq")] = [](Params & p){ return new RequestQueryAllelesByRegion(p.range(),p[0].asStr()); };
-	pim->get[ReqType("alleles",supportPagination).param("refseq").param("begin").param("end")] = [](Params & p){ return new RequestQueryAllelesByRegion(p.range(),p[0].asStr(),p[1].asUInt(),p[2].asUInt()); };
+	pim->get[ReqType("alleles",supportPagination).param("refseq").param("refGenome").param("begin").param("end").param("alignment")] = [](Params & p){ return new RequestQueryAllelesByRegion(p.range(),p[0].asStr(),p[1].asStr(),p[2].asUInt(),p[3].asUInt(),p[4].asStr()); };
+	pim->get[ReqType("alleles",supportPagination).param("refseq").param("begin").param("end").param("alignment")] = [](Params & p){ return new RequestQueryAllelesByRegion(p.range(),p[0].asStr(),"GRCh38",p[1].asUInt(),p[2].asUInt(),p[3].asStr()); };
+	pim->get[ReqType("alleles",supportPagination).param("refseq").param("refGenome").param("begin").param("end")] = [](Params & p){ return new RequestQueryAllelesByRegion(p.range(),p[0].asStr(),p[1].asStr(),p[2].asUInt(),p[3].asUInt()); };
+	pim->get[ReqType("alleles",supportPagination).param("refseq").param("begin").param("end")] = [](Params & p){ return new RequestQueryAllelesByRegion(p.range(),p[0].asStr(),"GRCh38",p[1].asUInt(),p[2].asUInt()); };
 
 	// queries - genes
 	pim->get[ReqType("genes",supportPagination).param("name")] = [](Params & p)->Request*{ return new RequestQueryGenes(p.range(),p[0].asStr()); };
@@ -326,7 +335,7 @@ Dispatcher::Dispatcher(Configuration const & conf) : pim(new Pim(conf))
 	// not documented
 	pim->get[ReqType("genomicAlleles",supportPagination)] = [](Params & p){ return new RequestQueryAlleles(p.range(),false); };
 	pim->get[ReqType("proteinAlleles",supportPagination)] = [](Params & p){ return new RequestQueryAlleles(p.range(),true ); };
-	pim->get[ReqType("refseq", "{RSid}", "sequence")] = [](Params & p)->Request*{ return new RequestFetchReference(p[0].asStr(),true); };
+	pim->get[ReqType("refseq", "{RSid}", "sequence")] = [](Params & p)->Request*{ return new RequestFetchReference(p[0].asStr(),"",true); };
 	pim->get[ReqType("matchAlleles").param("gene").param("variant")] = [](Params & p){ return new RequestQueryAllelesByGeneAndMutation(p[0].asStr(),p[1].asStr()); };
 
 	// external sources

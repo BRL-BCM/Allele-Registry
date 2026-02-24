@@ -149,8 +149,8 @@ void decodeHgvs ( ReferencesDatabase const* seqDb
 				);
 
 // Produce HGVS definition of modification, these definitions include neither reference name nor colon, e.g.: g.1231A>C, not NC001.2:g.1231A>C
-std::string toHgvsModifications( ReferencesDatabase const* seqDb, NormalizedGenomicVariant const & );
-std::string toHgvsModifications( ReferencesDatabase const* seqDb, NormalizedProteinVariant const & );
+std::string toHgvsModifications( ReferencesDatabase const* seqDb, NormalizedGenomicVariant const & , alignment pAlignment = alignment::leftAligned );
+std::string toHgvsModifications( ReferencesDatabase const* seqDb, NormalizedProteinVariant const & , alignment pAlignment = alignment::leftAligned );
 
 
 #endif /* HGVS_HPP_ */

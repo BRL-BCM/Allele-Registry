@@ -102,8 +102,8 @@ std::string vrJSONBuilder(std::string const & sequence_digest, unsigned cstart, 
   std::string allele_digest = trunc512(allele_string);
 
 
-  std::string final_response = "{\"id\":\"ga4gh:VA."+allele_digest+"\"," 
-  + "\"location\":" + "{\"id\":\"ga4gh:SL." + location_digest + "\"," + 
+  std::string final_response = "{\"_id\":\"ga4gh:VA."+allele_digest+"\"," 
+  + "\"location\":" + "{" + 
   interval + 
   ",\"sequence_id\":\"ga4gh:SQ." + 
   sequence_digest + 

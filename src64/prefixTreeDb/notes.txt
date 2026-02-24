@@ -1,0 +1,100 @@
+./generator 0 256 1000 > dbTest01.txt
+./generator 0 100 100000 > dbTest02.txt
+./generator 0 1000 4000000 > dbTest03.txt   # ~ 80K / second
+./generator 0 128 33554432 > dbTest04.txt   # ~120K / second
+./generator 0 32 134217728 > dbTest05.txt
+./generator 0 8 536870912 > dbTest06.txt
+./generator 0 4 1073741824 > dbTest07.txt
+
+shuf dbTest02.txt > dbTest52.txt
+shuf dbTest03.txt > dbTest53.txt
+shuf dbTest04.txt > dbTest54.txt
+shuf dbTest05.txt > dbTest55.txt
+
+
+======= whole times of testDb_createAndCompare (dataPageSize=512)
+# on my laptop
+registering 32M on empty db, chunk=1M
+- sorted   (dbTest04): 1 min
+- unsorted (dbTest54): 7 min
+rewriting the same dataset
+- sorted on sorted db: 1 min 5 sec
+- sorted on unsorted db: 55 sec
+- unsorted on sorted db: 9 min 20 sec
+- unsorted on unsorted db: 9 min 45 sec
+# on my workstation
+registering
+- sorted   (dbTeso04): 57 s
+- unsorted (dbTest54): 56 min 15 s
+rewriting
+- sorted on sorted db: 1 min 43 s
+- sorted on unsorted db: 1 min 34 s
+- unsorted on sorted: STILL SLOW
+rewriting without any writes: 
+- unsorted on sorted - first 6 chunks: 30s, 51s, 50s, 51s, 50s, 53s 
+File sizes: dbTest04.data = 4.1GB  dbTest04.index = 864M
+
+======= whole times of testDb_createAndCompare (dataPageSize=4096)
+# on my workstation
+registering
+- sorted   (dbTeso04): 53 s
+- unsorted (dbTest54): 48 min 20 s
+
+File sizes: dbTest04.data = 4.0GB  dbTest04.index = 864M
+
+======= whole times of testDb_createAndCompare - new version (dataPageSize=512)
+# on my laptop
+registering 32M on empty db, chunk=1M
+- sorted   (dbTest04): 55 s
+- unsorted (dbTest54): 6 min 46 s
+File sizes: data = 1.3GB  index = 228MB
+
+======= whole times of testDb_createAndCompare - new version (dataPageSize=4096)
+# on my workstation
+registering 32M on empty db, chunk=1M
+- sorted   (dbTest04): 54 s
+- unsorted (dbTest54): 
+File sizes: data = 1.1GB  index = 228MB
+
+registering 512M on empty db, chunk=1M
+- sorted  (dbTest06): ~22 min
+File sizes: data = 19GB  index = 228MB
+
+read the database above:
+time ./testDb_readAll tdb06 | wc -l
+540870914
+real	18m39.397s
+user	8m49.741s
+sys	22m37.814s
+
+
+writing unsorted 4M (dbTest53) to 512M database (dbTest06)
+time ./testDb_createAndCompare tdb06 ./dbTest53.txt 
+Read input data
+Number of records: 4000000
+Load data into database
+Writing 1048576 records
+Index PM ->  Reads: 65793 (1984ms)   Writes: 122072 (43971ms)   Synch: 122072 (0ms)
+Data  PM ->  Reads: 61036 (189222ms)   Writes: 122072 (8841ms)   Synch: 61036 (0ms)
+Total time: 309 seconds
+Number of chunks written: 1
+Writing 1048576 records
+Index PM ->  Reads: 0 (0ms)   Writes: 122072 (60666ms)   Synch: 122072 (0ms)
+Data  PM ->  Reads: 61036 (181040ms)   Writes: 122072 (43594ms)   Synch: 61036 (0ms)
+Total time: 354 seconds
+Number of chunks written: 2
+Writing 1048576 records
+Index PM ->  Reads: 0 (0ms)   Writes: 122072 (78806ms)   Synch: 122072 (0ms)
+Data  PM ->  Reads: 61036 (134466ms)   Writes: 122072 (34379ms)   Synch: 61036 (0ms)
+Total time: 316 seconds
+Number of chunks written: 3
+Writing 854272 records
+Index PM ->  Reads: 0 (0ms)   Writes: 122072 (71356ms)   Synch: 122072 (0ms)
+Data  PM ->  Reads: 61036 (153372ms)   Writes: 122072 (34188ms)   Synch: 61036 (0ms)
+Total time: 321 seconds
+Number of chunks written: 3
+
+real	21m49.271s
+user	4m21.302s
+sys	0m51.838s
+

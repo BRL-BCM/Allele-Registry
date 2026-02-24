@@ -1,0 +1,75 @@
+{ 
+    "@context": {
+        "xsd": "http://www.w3.org/TR/xmlschema-2/#",
+        "gns": "http://schema.genome.network/",
+        "type": {  
+            "@id"  : "gns:isTypeOf"
+        },
+        "activeIds": {
+            "@id"  : "gns:replacedBy",
+            "@type": "@id"
+        },
+        "externalRecords" : { 
+            "@id"  : "gns:externalRecord",
+            "@type": "@id",
+            "@container": "@index"
+        },
+        "variationId": {
+            "@id"  : "gns:hasIdentifierVariationId"
+        },
+        "preferredHgvs": {
+            "@id"  : "gns:hasIdentifierPreferredHgvs"
+        },
+        "RCV": {
+            "@id"  : "gns:hasIdentifierRCV"
+        },
+        "rs" : {
+            "@id"  : "gns:hasIdentifierRs"
+        },
+        "genomicAlleles" : { 
+            "@reverse": "gns:isAssignedTo"
+        },
+        "transcriptAlleles" : { 
+            "@reverse": "gns:isAssignedTo"
+        },
+        "hgvs": { 
+            "@id"  : "gns:hasIdentifierHGVS"
+        },
+        "referenceSequence": { 
+            "@id"  : "gns:definedFor",
+            "@type": "@id"
+        },
+        "coordinates": { 
+            "@id"  : "gns:contains",
+            "@type": "@id"
+        },
+        "start": { 
+            "@id"  : "gns:positionStart",
+            "@type": "xsd:unsignedInt"
+        },
+        "end": { 
+            "@id"  : "gns:positionEnd",
+            "@type": "xsd:unsignedInt"
+        },
+        "referenceAllele": { 
+            "@id"  : "gns:referenceAllele"
+        },
+        "allele": { 
+            "@id"  : "gns:replacedBy"
+        },
+        "startIntronOffset": {
+            "@id"  : "gns:startIntronOffset",
+            "@type": "xsd:unsignedInt"
+        },
+        "startIntronDirection": { 
+            "@id"  : "gns:startIntronDirection"
+        },
+        "stopIntronOffset": {
+            "@id"  : "gns:stopIntronOffset",
+            "@type": "xsd:unsignedInt"
+        },
+        "stopIntronDirection": { 
+            "@id"  : "gns:stopIntronDirection"
+        }
+    }
+}

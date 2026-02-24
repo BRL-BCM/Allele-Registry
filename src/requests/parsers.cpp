@@ -161,6 +161,20 @@ ParserVcf::ParserVcf(std::shared_ptr<std::vector<char>> body) : pim(new Pim)
 	pim->fPosition = body->begin();
 }
 
+bool ParserVcf::logPayload(std::ofstream & payload) {
+	// store vcf content to log
+	try {
+	std::vector<char>::const_iterator iBody = pim->fBody->begin();
+	std::vector<char>::const_iterator const iEnd = pim->fBody->end();
+		while(iBody < iEnd) {
+			payload << *iBody;
+			++iBody;
+		}
+	} catch (...) {
+			// some sort of parsing error happened, just debugging though, so keep application alive, ignore 
+	}
+	return true;
+}
 
 bool ParserVcf::parseRecords(std::vector<std::vector<std::string>> & out, std::vector<unsigned> & outLines, unsigned maxRecordsCount)
 {
@@ -366,6 +380,20 @@ ParserTabSeparated::ParserTabSeparated(std::shared_ptr<std::vector<char>> body) 
 	pim->fPosition = body->begin();
 }
 
+bool ParserTabSeparated::logPayload(std::ofstream & payload) {
+	// store vcf content to log
+	try {
+	std::vector<char>::const_iterator iBody = pim->fBody->begin();
+	std::vector<char>::const_iterator const iEnd = pim->fBody->end();
+		while(iBody < iEnd) {
+			payload << *iBody;
+			++iBody;
+		}
+	} catch (...) {
+			// some sort of parsing error happened, just debugging though, so keep application alive, ignore 
+	}
+	return true;
+}
 
 bool ParserTabSeparated::parseRecords(std::vector<std::vector<std::string>> & out, std::vector<unsigned> & outLines, unsigned maxRecordsCount)
 {
@@ -528,6 +556,20 @@ inline std::string parseSequence(std::vector<char>::const_iterator & iB, std::ve
 	return s;
 }
 
+bool ParserVcf2::logPayload(std::ofstream & payload) {
+	// store vcf content to log
+	try {
+	std::vector<char>::const_iterator iBody = pim->fBody->begin();
+	std::vector<char>::const_iterator const iEnd = pim->fBody->end();
+		while(iBody < iEnd) {
+			payload << *iBody;
+			++iBody;
+		}
+	} catch (...) {
+			// some sort of parsing error happened, just debugging though, so keep application alive, ignore 
+	}
+	return true;
+}
 
 bool ParserVcf2::parseRecords(std::vector<PlainVariant> & out, unsigned maxRecordsCount)
 {

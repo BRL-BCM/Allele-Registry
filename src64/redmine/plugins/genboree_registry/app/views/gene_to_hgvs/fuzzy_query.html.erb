@@ -1,0 +1,102 @@
+<div class="row">
+  <br>
+</div>
+<div class="row">
+  <% if @error_object.empty? %>
+    <h2>Summary of alleles queried using fuzzy query:</h2>
+    <% if ! JSON.parse(@response_from_registry).empty? %>
+       <div class="well well-sm">
+
+       <% if JSON.parse(@response_from_registry).is_a?(Array) %>
+
+         <h3>Canonical allele identifiers for mutations based on nucleotide sequences.</h3>
+         <% if @searched_type == 'p.' %>
+	   <h5>The following table provides identifiers for the <strong>nucleotide</strong> changes that lead to amino-acid changes specified in the query <em>(Gene: <%= @searched_gene%> Variation: <%= @searched_variation %>)</em>. We recommend and encourage to use the identifier(s) provided in this table to identify variants in annotation systems (for example, Pathogenicity Calculator or Variant Curation Interface). </h5>
+           <br>
+         <% end %>
+
+	 <%= render :partial => 'bulk_query/bulk_partial', :locals => {:input_response => @response_from_registry , :input_hgvs => @hgvs} %>
+       <% end %>
+       </div>
+    <% end %>
+    <br>
+    <br>
+    <% if ! JSON.parse(@response_from_registry_protein).empty? %>
+     <% if @searched_type != 'c.' %>
+          <div class="well well-sm">
+            <h3>Amino-acid allele identifiers for mutations based on amino-acid sequences sequences.</h3>
+	   <h5>The following table provides identifiers for the <strong>amino-acid</strong> changes. If there is a table <strong>above</strong> this table and has identifiers (canonical allele identifiers - CAIds) then we recommend and encourage to use them for identifying variants in annotation systems (for example, Pathogenicity Calculator or Variant Curation Interface). </h5>
+           <br>
+            <% if JSON.parse(@response_from_registry_protein).is_a?(Array) %>
+                 <%= render :partial => 'bulk_query/bulk_partial', :locals => {:input_response => @response_from_registry_protein , :input_hgvs => @hgvs_p} %>
+            <% end %>
+          </div>
+       <% end %>
+    <% end %>
+  <% else %>
+     <div class="col-sm-12 bg-danger text-danger">
+	<h4> An error occured while parsing the information you provided. </h4>
+	<p> The following information might be helpful to understand the reason.  </p>
+
+	<p> <b>Description of the error:</b> <%= @error_object["description"] %> </p>
+	<p> <b>Explanation:</b> <%= @error_object["message"] %> </p>
+     </div>
+  <% end %>
+
+    
+</div>
+
+<style>
+.hide-me {
+    display: none;
+}
+.gene {
+  font-size: 0.6em;
+}
+.panel {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+p {
+  font-weight: 200;
+  color: grey;
+}
+.label-jsonld {
+  background: #00d2e5;
+  border-radius: 1em;
+  font-style: normal;
+  font-size: 0.7em;
+  font-weight: 700;
+}
+.add-padding-top {
+  padding-top: 0.5em;
+}
+.hide-me {
+    display: none;
+}
+.transcript-cdot, .aa-pdot {
+ font-size: 0.9em;
+}
+.canonical-allele {
+ font-weight: 600;
+ font-style: italic;
+}
+.transcript-cdot, .grch38-gdot, .aa-pdot {
+  word-break: break-all
+}
+.label-clinvar {
+  background-color: goldenrod;
+}
+.label-exac {
+  background: cornflowerblue;
+}
+.label-gnomad {
+  background: coral;
+}
+.label-dbsnp {
+  background: palevioletred;
+}
+.label-allelic {
+  background: #777777;
+}
+</style>

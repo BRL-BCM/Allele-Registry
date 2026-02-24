@@ -22,6 +22,7 @@
 # include <boost/asio/io_service.hpp>
 # include <boost/asio/deadline_timer.hpp>
 # include <boost/asio/strand.hpp>
+# include <boost/thread/mutex.hpp>
 
 # include "Thread.hpp"
 
@@ -77,6 +78,7 @@ private:
     void run(ThreadInit fct);
 
 private:
+    boost::mutex m;
     std::shared_ptr<boost::asio::io_service> service_;
     bool running_ = false;
     size_t nb_thread_;

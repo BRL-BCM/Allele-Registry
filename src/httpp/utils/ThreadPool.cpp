@@ -14,6 +14,7 @@
 
 #include <boost/log/trivial.hpp>
 
+
 namespace HTTPP
 {
 namespace UTILS
@@ -100,19 +101,25 @@ void ThreadPool::start(ThreadInit fct)
 
 void ThreadPool::run(ThreadInit fct)
 {
+    m.lock();
     BOOST_LOG_TRIVIAL(debug) << "start thread";
+    m.unlock();
 
     if (fct)
     {
         fct();
     }
 
+    m.lock();
     BOOST_LOG_TRIVIAL(debug) << "call run()";
+    m.unlock();
     ++running_threads_;
 
     this->service_->reset();
     this->service_->run();
+    m.lock();
     BOOST_LOG_TRIVIAL(debug) << "is stopping";
+    m.unlock();
     --running_threads_;
 }
 

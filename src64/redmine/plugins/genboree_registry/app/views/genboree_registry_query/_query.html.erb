@@ -1,0 +1,169 @@
+<div class="row first-row-margin">
+ <div class="well">
+   <div class="row">
+     <div class="col-sm-12 gray-font">
+       <h3>Search Variants in ClinGen Allele Registry</h3>
+     </div>
+   </div>
+
+   <br>
+
+   <div class="row hide-me">
+       <div class="col-sm-3 small almost-invisible">
+	   Type of search
+       </div>
+       <div class="col-sm-8 small almost-invisible"> 
+	<span>
+	 Query
+	</span> 
+       </div>
+       <div class="col-sm-1">
+       </div>
+   </div>
+
+   <div class="row hide-me"> 
+     <form>
+       <div id="query-selection" class="col-sm-3"> 
+	 <div class="btn-group col-sm-12 small-margin">
+	    <button id="exampleSelect2" type="button" class="btn btn-default dropdown-toggle form-control" data-toggle="dropdown">
+	       <div id="exampleSelect1" class="btn-group col-sm-10 text-left small-margin" data-bind="label">
+		    Select One
+	       </div>
+	       <div class="btn-group col-sm-2 text-right small-margin">
+		    <span class="caret"></span>
+	       </div>
+	    </button>
+	    <ul id="selection-list" class="dropdown-menu small-margin" role="menu">
+	      <li class="type-search"><a>HGVS/Descriptor</a></li>
+	      <li class="type-search"><a>Canonical Allele Identifier</a></li>
+	      <hr class="dropdown-divider"></hr>
+	      <li class="type-search"><a>ClinVar Variation Id</a></li>
+	      <li class="type-search"><a>ClinVar RCV Id</a></li> 
+	      <li class="type-search"><a>dbSNP Id</a></li> 
+	      <li class="type-search"><a>ExAC Id</a></li> 
+	      <li class="type-search"><a>gnomAD Id</a></li> 
+	      <li class="type-search"><a>MyVariant Id (hg19)</a></li> 
+	      <li class="type-search"><a>Any Identifier</a></li>
+	      <hr class="dropdown-divider"></hr>
+	      <li class="type-search"><a>HGNC Gene Symbol</a></li> 
+	      <li class="type-search"><a>Reference sequence &amp; position</a></li> 
+	      <hr class="dropdown-divider"></hr>
+	      <li class="type-search"><a>PMID</a></li> 
+	    </ul>
+	 </div> <!-- end left panel dropdown-->
+       </div> <!-- end query -->
+
+       <div id="simple-search-form" class="col-sm-7 simple-search"> 
+	 <input class="form-control" value="" id="example-text-input" type="text"> 
+       </div>  <!-- Simple search box -->
+
+       <div id="complex-search-form" class="col-sm-7 complex-search" hidden="hidden"> 
+	  <div class="row"> 
+	    <div class="col-sm-7"> 
+	       <input class="form-control complex-search-field" id="refseq-identifier" type="text"> 
+	    </div> 
+	    <div class="col-sm-3"> 
+	      <input class="form-control complex-search-field" id="refseq-start"> 
+	    </div> 
+	    <div class="col-sm-2"> 
+	      <input class="form-control complex-search-field" id="refseq-end"> 
+	    </div> 
+	  </div> 
+       </div> 
+
+       <div class="col-sm-2">
+	 <button id="start-search" class="btn btn-primary" type="button" disabled><span class="fa fa-search" style="padding-left: 3px ; padding-right: 3px"></span>Search</button>
+       </div>
+    </form>
+  </div> <!-- end row before form -->
+
+   <div class="row hide-me">
+       <div class="col-sm-3">
+       </div>
+       <div class="col-sm-8"> 
+	    <p>
+	      <span id="for-example">
+		    <b>For example:</b>
+	      </span> 
+	      <span id="actual-example">
+		   Select type of search to load examples.
+	      </span> 
+	    </p>
+       </div>
+       <div class="col-sm-1"> </div>
+    </div> <!-- example row -->
+
+    <br>
+
+    <div class="row hide-me">
+      <div class='col-sm-12 text-center'>
+	  <a class="small" data-toggle="modal" data-target="#supported-searches" role="button" >
+	    <span class="fa fa-info-circle"></span>Supported searches
+	  </a>
+
+     </div> <!-- end col-12-->
+    </div> <!-- end row -->
+	<div id="supported-searches" class="modal fade text-left" role="dialog" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	    <div class="modal-dialog" role="document">
+	      <div class="modal-content">
+                <%= render :partial => "supported_searches" %>
+	      </div><!-- End Modal Contents -->
+	    </div><!-- End modal dialog -->
+	</div><!-- End Modal -->
+
+        <div class="row hide-me">
+        </div> 
+    </div>  <!-- row ends -->
+  </div>  <!-- Jumbotron ends -->
+
+<style>
+#actual-example, #for-example {
+  color: #666666;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 0.9em;
+}
+
+.dropdown-divider{
+  margin-top: 1px;
+  margin-bottom: 1px;
+}
+.small-margin{
+  padding: 0px;
+}
+</style>
+
+<script>
+   $( document.body ).on( 'click', '.dropdown-menu li', function( event ) {
+
+      var $target = $( event.currentTarget );
+
+      $target.closest( '.btn-group' )
+	 .find( '[data-bind="label"]' ).text( $target.text() )
+	    .end()
+	 .children( '.dropdown-toggle' ).dropdown( 'toggle' );
+
+      return false;
+
+   });
+</script>
+<style>
+.query-jumbotron{
+ margin-top: 5px;
+}
+.fa {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+.almost-invisible {
+  color: #666666;
+}
+input[type=number] {
+ -moz-appearance: textfield;
+}
+.first-row-margin {
+ margin-top: 10px;
+}
+</style>
+
+

@@ -1,0 +1,31 @@
+ <!-- Load type ahead -->
+<%= javascript_include_tag "typeahead.bundle.js", :plugin => 'genboree_registry' %>
+<%= javascript_include_tag "typeahead_gene.js", :plugin => 'genboree_registry' %>
+
+<!-- Begining of the gene search -->
+  <%= form_tag('show_transcripts') do %>
+    <div class="row">
+      <div class="well">
+       <div id="form1" class="row">
+         <div class="col-sm-12 sequence">
+           <h2>Enter gene symbol here (e.g. APC):</h2>
+             <div class="form-group">
+               <input type="text" name="gene" class="form-control typeahead tt-query" autocomplete="off" spellcheck="false" id="gene-symbol">
+             </div>
+         </div>
+         <div class="col-sm-12">
+           <%= submit_tag('Search Reference Sequences' , {:class => "btn btn-primary", :id => 'search-ref-seq', :disabled => true}) %>
+         </div>
+       </div>
+      </div>
+    </div>
+  <% end %>
+  <style>
+  .tt-menu{
+    background: #e8f1f2;
+    font-weight: 600;
+  }
+.hide-me {
+    display: none;
+}
+  </style>

@@ -1,0 +1,14 @@
+<td class="aa-pdot">
+  <% if has_transcript_alleles? hit %>
+   <% (get_uniq_cp hit).uniq.each do |ta|  %>
+    <%= ta.split("$")[1] %> <br>
+   <% end %> 
+  <% end %>
+  <% if has_aminoacid_alleles? hit %>
+   <% (get_aminoacid_hgvs hit).each do |pa|  %>
+    <% pa["expressions"].each do |hgvs| %>
+         <%=  hgvs.split(":")[1] %> <br>
+    <% end %>
+   <% end %> 
+  <% end %>
+</td> 

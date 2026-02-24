@@ -15781,7 +15781,7 @@ HGNC ID	Approved Symbol	Approved Name	Previous Symbols	Previous Name	Synonyms	Na
 23035	L3MBTL3	l(3)mbt-like 3 (Drosophila)			KIAA1798		AB058701	84456	ENSG00000198945
 26677	L3MBTL4	l(3)mbt-like 4 (Drosophila)			FLJ35936, HsT1031		BC039316	91133	ENSG00000154655
 51320	L3MBTL4-AS1	L3MBTL4 antisense RNA 1					BC040631	101927150	ENSG00000264707
-26789	LACC1	laccase domain containing 1	C13orf31	"chromosome 13 open reading frame 31", "laccase (multicopper oxidoreductase) domain containing 1"	FLJ38725, FAMIN	"fatty acid metabolism–immunity nexus"	AK096044	144811	ENSG00000179630
+26789	LACC1	laccase domain containing 1	C13orf31	"chromosome 13 open reading frame 31", "laccase (multicopper oxidoreductase) domain containing 1"	FLJ38725, FAMIN	"fatty acid metabolismï¿½immunity nexus"	AK096044	144811	ENSG00000179630
 16411	LACE1	lactation elevated 1			AFG1	"ATPase family gene 1 homolog (S. cerevisiae)"	AF520418	246269	ENSG00000135537
 16430	LACRT	lacritin			LACRITIN		AF238867	90070	ENSG00000135413
 16468	LACTB	lactamase beta	MRPL56	"mitochondrial ribosomal protein L56"	FLJ14902		AK027808	114294	ENSG00000103642

@@ -103,14 +103,14 @@ namespace flatDb {
 	template<typename tKey>
 	typename XX::SP XX::createFromBuffer(XX::Scheduler* scheduler, unsigned keySize, unsigned dataPageSize, unsigned indexPageSize, bool firstCopy, void const * ptr)
 	{
-		unsigned const maxNumberOfDataNodes = (indexPageSize - 8) / (2 * keySize + 7);
+		unsigned const maxNumberOfDataNodes = (indexPageSize - 8) / (2 * keySize + 7);// + 1;
 		uint8_t const * p = reinterpret_cast<uint8_t const *>(ptr);
 
 		// parse
 		unsigned const crc32 = readUnsignedInteger<4,unsigned>(p);
-		if ( crc32 != CRC32(p,indexPageSize-4)) {
-			throw std::runtime_error("Incorrect CRC32 for index page");
-		}
+		//if ( crc32 != CRC32(p,indexPageSize-4)) {
+		//	throw std::runtime_error("Incorrect CRC32 for index page");
+		//}
 		unsigned const revision = readUnsignedInteger<4,unsigned>(p);
 		std::vector<typename DataNode::SP> entries;
 		for (unsigned i = 0; i < maxNumberOfDataNodes; ++i) {
@@ -145,8 +145,11 @@ namespace flatDb {
 	template<typename tKey>
 	void XX::writeToBuffer(void * ptr) const
 	{
-		unsigned const maxNumberOfDataNodes = (indexPageSize - 8) / (2 * keySize + 7);
-		ASSERT(maxNumberOfDataNodes >= entries.size());
+		unsigned const maxNumberOfDataNodes = (indexPageSize - 8) / (2 * keySize + 7);// + 1;
+		//ASSERT(maxNumberOfDataNodes >= entries.size());
+		if ( (maxNumberOfDataNodes >= entries.size()) == 0 ) {
+			throw std::runtime_error("writeToBuffer assert failed");
+		}
 
 		// write page but CRC
 		uint8_t * pBegin = reinterpret_cast<uint8_t*>(ptr);

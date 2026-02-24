@@ -1,0 +1,18 @@
+#ifndef PROTEINS_HPP_
+#define PROTEINS_HPP_
+
+#include "../referencesDatabase/referencesDatabase.hpp"
+#include "../core/variants.hpp"
+
+// true if can be represented as proteinVar, false otherwise
+bool calculateProteinVariation
+    ( ReferencesDatabase const * refDb
+    , NormalizedGenomicVariant const & transcriptVar
+    , std::string const & hgvsDefs
+    , std::string & outGeneralHgvs
+    , std::string & outCanonicalHgvs
+    , unsigned const matchSize = 500
+    );
+
+
+#endif /* PROTEINS_HPP_ */

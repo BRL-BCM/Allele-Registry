@@ -69,6 +69,12 @@ namespace flatDb {
 		void unlockPage(unsigned pageId);
 
 		// read directly from storage to given buffer (cache is omitted)
+		void readIndexPages(unsigned firstPageId, unsigned pagesCount, uint8_t* buffer);
+
+		// write directly from given buffer to storage (cache is omitted)
+		void writeIndexPages(unsigned firstPageId, unsigned pagesCount, uint8_t const* buffer);
+
+		// read directly from storage to given buffer (cache is omitted)
 		void readPages(unsigned firstPageId, unsigned pagesCount, uint8_t* buffer);
 
 		// write directly from given buffer to storage (cache is omitted)

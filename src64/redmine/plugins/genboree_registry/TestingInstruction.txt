@@ -1,0 +1,22 @@
+This document describe what steps to follow for testing to make sure every components works fine.
+
+Registry search 
+1. Check all the search functionality works fine and returns expected results.
+ For HGVS based search
+   * Search with registered genomic, transcript, and amino-acid alleles. 
+   * Search with unregistered genomic, transcript, and amino-acid alleles
+   * Search that will result in error
+
+2. Single allele page checks:
+* Check all links including calculator/JSON-LD is working fine.
+* Check the search <100bp and >100bp works fine.
+
+3. Vector allele page checks:
+* Check vector allele working fine by 
+  1. Gene based search 2. Bulk query 3. Range search
+* Check previous and next works fine.
+* Check all the links in the right most column works fine.
+
+4. Check bulk upload function and see if works fine. The bulk upload should contain all three cases of scenarios. Registered, Un registered and errorful HGVS.
+
+5. Do not have HGVS? Go through entire process to make sure it works fine.
